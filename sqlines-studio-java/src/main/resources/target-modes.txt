@@ -1,0 +1,17 @@
+Microsoft SQL Server:sql
+Oracle:oracle
+IBM DB2:DB2
+Hive:hive
+MySQL:mysql
+MariaDB:mariadb
+PostgreSQL:postgresql
+Presto:presto
+Redshift:redshift
+Snowflake:snowflake
+Spark SQL:spark
+Sybase:sybase
+Informix:informix
+Teradata:teradata
+Greenplum:greenplum
+Netezza:netezza
+Vertica:vertica
