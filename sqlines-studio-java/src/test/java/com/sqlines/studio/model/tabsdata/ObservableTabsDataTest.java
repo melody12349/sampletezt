@@ -17,9 +17,12 @@
 package com.sqlines.studio.model.tabsdata;
 
 import com.sqlines.studio.model.tabsdata.listener.TabsChangeListener;
+
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.*;
+import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
@@ -29,25 +32,21 @@ public class ObservableTabsDataTest {
     private ObservableTabsData tabsData;
 
     @Before
-    public void init() {
+    public void setUp() {
         tabsData = new ObservableTabsData();
     }
 
     @Test
-    public void addingTabs() {
-       tabsData.openTab(0);
-       tabsData.openTab(1);
-       tabsData.openTab(2);
+    public void shouldCount3TabsWhenAdding3Tabs() {
+        tabsData.openTab(0);
+        tabsData.openTab(1);
+        tabsData.openTab(2);
 
-       tabsData.removeTab(0);
-       tabsData.removeTab(0);
-       tabsData.removeTab(0);
-
-       assertThat(tabsData.countTabs(), equalTo(0));
+        assertThat(tabsData.countTabs(), equalTo(3));
     }
 
     @Test
-    public void deletingTabs() {
+    public void shouldCount3TabsWhenDeleting3Tabs() {
         tabsData.openTab(0);
         tabsData.openTab(1);
         tabsData.openTab(2);
@@ -60,16 +59,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void countingTabs() {
-        tabsData.openTab(0);
-        tabsData.openTab(1);
-        tabsData.openTab(2);
-
-        assertThat(tabsData.countTabs(), equalTo(3));
-    }
-
-    @Test
-    public void notificationOnAddingTabs() {
+    public void shouldNotifyWhenAddingTabs() {
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addTabsListener((change -> {
             if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_ADDED) {
@@ -82,7 +72,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnDeletingTabs() {
+    public void shouldNotifyWhenDeletingTabs() {
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addTabsListener((change -> {
             if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_REMOVED) {
@@ -97,7 +87,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnSettingCurrTabIndex() {
+    public void shouldNotifyWhenSettingCurrTabIndex() {
         tabsData.openTab(0);
         tabsData.openTab(1);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
@@ -113,7 +103,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnSettingTabTitle() {
+    public void shouldNotifyWhenSettingTabTitle() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addTabTitleListener((title, index) -> {
@@ -128,7 +118,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnSettingSourceText() {
+    public void shouldNotifyWhenSettingSourceText() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addSourceTextListener((text, index) -> {
@@ -143,7 +133,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnsettingTargetText() {
+    public void shouldNotifyWhenSettingTargetText() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addTargetTextListener((text, index) -> {
@@ -158,7 +148,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnSettingSourceMode() {
+    public void shouldNotifyWhenSettingSourceMode() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addSourceModeListener((mode, index) -> {
@@ -173,7 +163,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnsettingTargetMode() {
+    public void shouldNotifyWhenSettingTargetMode() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addTargetModeListener((mode, index) -> {
@@ -188,7 +178,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnSettingSourceFilePath() {
+    public void shouldNotifyWhenSettingSourceFilePath() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addSourceFilePathListener((path, index) -> {
@@ -203,7 +193,7 @@ public class ObservableTabsDataTest {
     }
 
     @Test
-    public void notificationOnSettingTargetFilePath() {
+    public void shouldNotifyWhenSettingTargetFilePath() {
         tabsData.openTab(0);
         AtomicReference<Boolean> notified = new AtomicReference<>(false);
         tabsData.addTargetFilePathListener((path, index) -> {
@@ -215,5 +205,30 @@ public class ObservableTabsDataTest {
         tabsData.setTargetFilePath("PATH", 0);
 
         assertThat(notified.get(), equalTo(true));
+    }
+
+    @Test
+    public void shouldWriteToFileWhenSerialized() {
+        tabsData.openTab(0);
+        tabsData.setCurrTabIndex(0);
+        tabsData.setTabTitle("TITLE", 0);
+        tabsData.setSourceMode("SMODE", 0);
+        tabsData.setTargetMode("TMODE", 0);
+        tabsData.setSourceText("STEXT", 0);
+        tabsData.setTargetText("TTEXT", 0);
+        tabsData.setSourceFilePath("SPATH", 0);
+        tabsData.setTargetFilePath("TPATH", 0);
+
+        URL serialFile = getClass().getResource("/tabsdata.serial");
+        try (ObjectOutputStream outStream = new ObjectOutputStream(new FileOutputStream(serialFile.getPath()));
+             ObjectInputStream inStream = new ObjectInputStream(new FileInputStream(serialFile.getPath()))) {
+            outStream.writeObject(tabsData);
+            ObservableTabsData data = (ObservableTabsData) inStream.readObject();
+
+            assertThat(tabsData.equals(data), equalTo(true));
+        } catch (FileNotFoundException | SecurityException | ClassNotFoundException ignored) {
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
     }
 }

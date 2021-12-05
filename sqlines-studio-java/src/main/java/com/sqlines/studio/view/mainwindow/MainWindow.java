@@ -152,7 +152,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public @NotNull FieldInFocus getFieldInFocus(int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
         return inFocus;
     }
 
@@ -168,7 +169,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void setSourceText(@NotNull String text, int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
         Tab tab = tabBar.getTabs().get(tabIndex);
         CentralNode centralNode = (CentralNode) tab.getContent();
@@ -177,7 +179,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void setTargetText(@NotNull String text, int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
         Tab tab = tabBar.getTabs().get(tabIndex);
         CentralNode centralNode = (CentralNode) tab.getContent();
@@ -191,7 +194,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void setTabTitle(@NotNull String title, int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
         Tab tab = tabBar.getTabs().get(tabIndex);
         tab.setText(title);
@@ -200,7 +204,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void setCurrTabIndex(int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
         tabBar.getSelectionModel().select(tabIndex);
     }
@@ -296,12 +301,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void openTab(int tabIndex) {
-        if (tabIndex < 0 || tabIndex > tabBar.getTabs().size()) {
-            int endInd = (tabBar.getTabs().size() == 0) ? 0 : tabBar.getTabs().size() - 1;
-            String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, " +
-                    tabIndex + " provided";
-            throw new IndexOutOfBoundsException(errorMsg);
-        }
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size() + 1);
 
         Tab newTab = new Tab();
         setTabTitle(newTab, tabIndex);
@@ -337,9 +338,10 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void closeTab(int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
-        tabBar.getTabs().remove(tabIndex);
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
+        tabBar.getTabs().remove(tabIndex);
         if (tabIndex != 0) {
             Tab tab = tabBar.getTabs().get(tabIndex - 1);
             CentralNode centralNode = (CentralNode) tab.getContent();
@@ -358,7 +360,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void showConversionStart(int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
         Tab currTab = tabBar.getTabs().get(tabIndex);
         CentralNode centralNode = (CentralNode) currTab.getContent();
@@ -367,7 +370,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
     @Override
     public void showConversionEnd(int tabIndex) {
-        checkRange(tabIndex); // Trows exception if tabIndex is out of valid range
+        // Trows exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabBar.getTabs().size());
 
         Tab currTab = tabBar.getTabs().get(tabIndex);
         CentralNode centralNode = (CentralNode) currTab.getContent();
@@ -597,8 +601,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         menuBar.setOnLineNumbersAction(action);
     }
 
-    private void checkRange(int tabIndex) {
-        if (tabIndex < 0 || tabIndex >= tabBar.getTabs().size()) {
+    private void checkRange(int tabIndex, int from, int to) {
+        if (tabIndex < from || tabIndex >= to) {
             int endInd = (tabBar.getTabs().size() == 0) ? 0 : tabBar.getTabs().size() - 1;
             String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, " +
                     tabIndex + " provided";

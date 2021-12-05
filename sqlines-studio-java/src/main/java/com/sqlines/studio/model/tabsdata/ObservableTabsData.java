@@ -32,6 +32,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Contains a synchronized observable list with the data of opened tabs.
@@ -55,6 +56,32 @@ public class ObservableTabsData implements Serializable {
         String targetMode = "";
         String sourceFilePath = "";
         String targetFilePath = "";
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+
+            if (other == null || getClass() != other.getClass()) {
+                return false;
+            }
+
+            TabData data = (TabData) other;
+            return Objects.equals(tabTitle, data.tabTitle)
+                    && Objects.equals(sourceText, data.sourceText)
+                    && Objects.equals(targetText, data.targetText)
+                    && Objects.equals(sourceMode, data.sourceMode)
+                    && Objects.equals(targetMode, data.targetMode)
+                    && Objects.equals(sourceFilePath, data.sourceFilePath)
+                    && Objects.equals(targetFilePath, data.targetFilePath);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tabTitle, sourceText, targetText,
+                    sourceMode, targetMode, sourceFilePath, targetFilePath);
+        }
     }
 
     private static final long serialVersionUID = 498374478;
@@ -83,15 +110,10 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void openTab(int tabIndex) {
-        if (tabIndex < 0 || tabIndex > tabsData.size()) {
-            int endInd = (tabsData.size() == 0) ? 0 : tabsData.size() - 1;
-            String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, "
-                    + tabIndex + " provided";
-            throw new IndexOutOfBoundsException(errorMsg);
-        }
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size() + 1);
 
         tabsData.add(tabIndex, new TabData());
-
         TabsChangeListener.Change added = new TabsChangeListener.Change(
                 TabsChangeListener.Change.ChangeType.TAB_ADDED, tabIndex
         );
@@ -109,9 +131,10 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void removeTab(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
-        tabsData.remove(tabIndex);
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
+        tabsData.remove(tabIndex);
         TabsChangeListener.Change removed = new TabsChangeListener.Change(
                 TabsChangeListener.Change.ChangeType.TAB_REMOVED, tabIndex
         );
@@ -161,7 +184,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized @NotNull String getTabTitle(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).tabTitle;
     }
 
@@ -176,7 +200,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized @NotNull String getSourceText(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).sourceText;
     }
 
@@ -191,7 +216,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized  @NotNull String getTargetText(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).targetText;
     }
 
@@ -206,7 +232,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized @NotNull String getSourceMode(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).sourceMode;
     }
 
@@ -221,7 +248,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized @NotNull String getTargetMode(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).targetMode;
     }
 
@@ -236,7 +264,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized @NotNull String getSourceFilePath(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).sourceFilePath;
     }
 
@@ -251,7 +280,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized @NotNull String getTargetFilePath(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).targetFilePath;
     }
 
@@ -266,7 +296,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setCurrTabIndex(int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         currTabIndex = tabIndex;
         tabIndexListeners.forEach(listener -> listener.changed(currTabIndex));
@@ -284,7 +315,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setTabTitle(@NotNull String title, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).tabTitle = title;
         titleListeners.forEach(listener -> listener.changed(title, tabIndex));
@@ -302,7 +334,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setSourceText(@NotNull String text, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).sourceText = text;
         sourceTextListeners.forEach(listener -> listener.changed(text, tabIndex));
@@ -320,7 +353,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setTargetText(@NotNull String text, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).targetText = text;
         targetTextListeners.forEach(listener -> listener.changed(text, tabIndex));
@@ -338,7 +372,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setSourceMode(@NotNull String mode, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).sourceMode = mode;
         sourceModeListeners.forEach(listener -> listener.changed(mode, tabIndex));
@@ -356,7 +391,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setTargetMode(@NotNull String mode, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).targetMode = mode;
         targetModeListeners.forEach(listener -> listener.changed(mode, tabIndex));
@@ -374,7 +410,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setSourceFilePath(@NotNull String filePath, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).sourceFilePath = filePath;
         sourcePathListeners.forEach(listener -> listener.changed(filePath, tabIndex));
@@ -392,7 +429,8 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setTargetFilePath(@NotNull String filePath, int tabIndex) {
-        checkRange(tabIndex); // Throws exception if tabIndex is out of valid range
+        // Throws exception if tabIndex is out of valid range
+        checkRange(tabIndex, 0, tabsData.size());
 
         tabsData.get(tabIndex).targetFilePath = filePath;
         targetPathListeners.forEach(listener -> listener.changed(filePath, tabIndex));
@@ -551,8 +589,27 @@ public class ObservableTabsData implements Serializable {
         targetPathListeners.add(listener);
     }
 
-    private void checkRange(int tabIndex) {
-        if (tabIndex < 0 || tabIndex >= tabsData.size()) {
+    @Override
+    public synchronized boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+
+        ObservableTabsData data = (ObservableTabsData) other;
+        return currTabIndex == data.currTabIndex && Objects.equals(tabsData, data.tabsData);
+    }
+
+    @Override
+    public synchronized int hashCode() {
+        return Objects.hash(tabsData, currTabIndex);
+    }
+
+    private void checkRange(int tabIndex, int from, int to) {
+        if (tabIndex < from || tabIndex >= to) {
             int endInd = (tabsData.size() == 0) ? 0 : tabsData.size() - 1;
             String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, "
                     + tabIndex + " provided";

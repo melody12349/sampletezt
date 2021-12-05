@@ -16,6 +16,7 @@
 
 package com.sqlines.studio;
 
+import com.sqlines.studio.model.CoreProcess;
 import com.sqlines.studio.model.license.License;
 import com.sqlines.studio.model.PropertiesLoader;
 import com.sqlines.studio.model.ResourceLoader;
@@ -65,8 +66,9 @@ public class Application extends javafx.application.Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Converter converter = new Converter(tabsData, ResourceLoader.loadCmdModes());
-        License license = new License();
+        CoreProcess coreProcess = new CoreProcess();
+        Converter converter = new Converter(tabsData, ResourceLoader.loadCmdModes(), coreProcess);
+        License license = new License(coreProcess);
 
         mainWindow = new MainWindow();
         mainWindow.setConversionModes(ResourceLoader.loadSourceModes(), ResourceLoader.loadTargetModes());

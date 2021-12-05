@@ -37,10 +37,13 @@ import java.util.List;
  */
 public class License implements Runnable {
     private static final Logger logger = LogManager.getLogger(License.class);
+
+    private final CoreProcess coreProcess;
     private final List<LicenseChangeListener> licenseListeners = new ArrayList<>(5);
     private long lastModified;
 
-    public License() {
+    public License(@NotNull CoreProcess coreProcess) {
+        this.coreProcess = coreProcess;
         try {
             File file = getLicenseFile();
             lastModified = file.lastModified();
@@ -72,10 +75,9 @@ public class License implements Runnable {
      */
     public synchronized boolean isActive() {
         getLicenseFile(); // Check license file presence
-        CoreProcess process = new CoreProcess();
         String logFilePath = createLogFile();
         try {
-            process.runAndWait(logFilePath);
+            coreProcess.runAndWait(logFilePath);
             deleteLogFile(logFilePath);
         } catch (IOException | SecurityException e) {
             return false;
@@ -83,7 +85,7 @@ public class License implements Runnable {
             deleteLogFile(logFilePath);
         }
 
-        String out = process.getOutput();
+        String out = coreProcess.getOutput();
         return !out.contains("FOR EVALUATION USE ONLY");
     }
 

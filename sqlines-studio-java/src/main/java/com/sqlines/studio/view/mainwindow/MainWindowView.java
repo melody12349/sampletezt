@@ -43,8 +43,6 @@ import java.util.Optional;
  *
  * @see ModeChangeListener
  * @see TextChangeListener
- * @see TabCloseEvent
- * @see RecentFileEvent
  */
 public interface MainWindowView extends BaseView {
 

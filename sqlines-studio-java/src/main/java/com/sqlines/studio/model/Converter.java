@@ -38,11 +38,20 @@ public class Converter {
 
     private final ObservableTabsData tabsData;
     private final Map<String, String> cmdModes;
+    private final CoreProcess coreProcess;
 
+    /**
+     *
+     * @param tabsData source of tab data to set
+     * @param cmdModes
+     * @param coreProcess
+     */
     public Converter(@NotNull ObservableTabsData tabsData,
-                     @NotNull Map<String, String> cmdModes) {
+                     @NotNull Map<String, String> cmdModes,
+                     @NotNull CoreProcess coreProcess) {
         this.tabsData = tabsData;
         this.cmdModes = cmdModes;
+        this.coreProcess = coreProcess;
     }
 
     /**
@@ -61,7 +70,6 @@ public class Converter {
      * a file and the security manager's checkWrite method denies write access to the file
      */
     public void run(int tabIndex) throws IOException {
-        CoreProcess process = new CoreProcess();
         String sourcePath = null;
         String targetPath = null;
         String logPath = null;
@@ -79,7 +87,7 @@ public class Converter {
             targetPath = createTargetFile(tabIndex);
             logPath = createLogFile();
 
-            process.runAndWait(sourceMode, targetMode, sourcePath, targetPath, logPath);
+            coreProcess.runAndWait(sourceMode, targetMode, sourcePath, targetPath, logPath);
 
             File file = new File(targetPath);
             try (FileInputStream stream = new FileInputStream(file)) {

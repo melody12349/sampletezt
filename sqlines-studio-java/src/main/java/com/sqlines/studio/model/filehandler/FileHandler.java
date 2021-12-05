@@ -28,6 +28,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -102,6 +103,7 @@ public class FileHandler implements Runnable, Serializable {
             int currIndex = tabsData.getCurrTabIndex();
             if (!tabsData.getSourceText(currIndex).isEmpty()) {
                 tabsData.openTab(currIndex + 1);
+                tabsData.setCurrTabIndex(currIndex + 1);
                 currIndex = tabsData.getCurrTabIndex();
             }
 
@@ -287,6 +289,27 @@ public class FileHandler implements Runnable, Serializable {
      */
     public void addRecentFileListener(@NotNull RecentFilesChangeListener listener) {
         recentFilesListeners.add(listener);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+
+        FileHandler that = (FileHandler) other;
+        return Objects.equals(sourceFilesLastModified, that.sourceFilesLastModified)
+                && Objects.equals(targetFilesLastModified, that.targetFilesLastModified)
+                && Objects.equals(recentFiles, that.recentFiles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sourceFilesLastModified, targetFilesLastModified, recentFiles);
     }
 
     private synchronized void tabsDataChanged(@NotNull TabsChangeListener.Change change) {
