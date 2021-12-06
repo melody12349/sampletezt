@@ -17,8 +17,12 @@
 package com.sqlines.studio.model.license;
 
 import com.sqlines.studio.model.CoreProcess;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
@@ -32,7 +36,6 @@ public class LicenseTest {
     public void setUp() {
         coreProcess = mock(CoreProcess.class);
 
-
         String path = getClass().getResource("/license.txt").getPath();
         path = path.substring(0, path.lastIndexOf("/"));
         System.setProperty("model.app-dir", path);
@@ -41,7 +44,28 @@ public class LicenseTest {
     }
 
     @Test
-    public void isActiveShouldReturnFalseWhenActiveIsNotActive() {
+    public void isActiveShouldReturnTrueWhenLicenseIsActive() {
+        when(coreProcess.getOutput()).thenReturn("LICENSED TO");
+        assertThat(license.isActive(), equalTo(true));
+    }
+
+    @Test
+    public void isActiveShouldReturnFalseWhenLicenseIsNotActive() {
+        when(coreProcess.getOutput()).thenReturn("FOR EVALUATION USE ONLY");
         assertThat(license.isActive(), equalTo(false));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldNotifyOnLicenseChange() throws IOException {
+        when(coreProcess.getOutput()).thenReturn("FOR EVALUATION USE ONLY");
+
+        AtomicBoolean notified = new AtomicBoolean(false);
+        license.addLicenseListener(isActive -> {
+            notified.set(true);
+            assertThat(isActive, equalTo(false));
+        });
+
+        license.changeLicense("Alexander", "4424242");
+        assertThat(notified.get(), equalTo(true));
     }
 }

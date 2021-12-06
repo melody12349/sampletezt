@@ -26,6 +26,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -47,8 +48,8 @@ public class FileHandlerTest {
 
     @Test
     public void shouldModifyTabsDataWhenOpeningFiles() throws IOException {
-        File file1 = new File(getClass().getResource("/file1.sql").getPath());
-        File file2 = new File(getClass().getResource("/file2.sql").getPath());
+        File file1 = new File(getClass().getResource("/srcFile1.sql").getPath());
+        File file2 = new File(getClass().getResource("/srcFile2.sql").getPath());
         List<File> mutableList = new ArrayList<>(List.of(file1, file2));
 
         fileHandler.openSourceFiles(mutableList);
@@ -62,7 +63,7 @@ public class FileHandlerTest {
 
     @Test
     public void shouldUpdateFileWhenSavingFile() throws IOException {
-        File file = new File(getClass().getResource("/file1.sql").getPath());
+        File file = new File(getClass().getResource("/srcFile1.sql").getPath());
         fileHandler.openSourceFiles(new ArrayList<>(List.of(file)));
         long lastModified = file.lastModified();
 
@@ -73,19 +74,23 @@ public class FileHandlerTest {
 
     @Test
     public void shouldNotifyWhenOpeningFiles() throws IOException {
+        AtomicBoolean notified = new AtomicBoolean(false);
         fileHandler.addRecentFileListener(change -> {
+            notified.set(true);
             RecentFilesChangeListener.Change.ChangeType type = change.getChangeType();
             assertThat(type, equalTo(RecentFilesChangeListener.Change.ChangeType.FILE_ADDED));
         });
 
-        File file = new File(getClass().getResource("/file1.sql").getPath());
+        File file = new File(getClass().getResource("/srcFile1.sql").getPath());
         fileHandler.openSourceFiles(new ArrayList<>(List.of(file)));
+
+        assertThat(notified.get(), equalTo(true));
     }
 
     @Test
     public void shouldWriteToFileWhenSerialized() throws IOException {
-        File file1 = new File(getClass().getResource("/file1.sql").getPath());
-        File file2 = new File(getClass().getResource("/file2.sql").getPath());
+        File file1 = new File(getClass().getResource("/srcFile1.sql").getPath());
+        File file2 = new File(getClass().getResource("/srcFile2.sql").getPath());
         fileHandler.openSourceFiles(new ArrayList<>(List.of(file1, file2)));
 
         URL serialFile = getClass().getResource("/filehandler.serial");
