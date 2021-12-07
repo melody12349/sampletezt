@@ -59,8 +59,8 @@ class AboutWindow extends Window {
         }
 
         ImageView logoImg = new ImageView(new Image(iconUrl.toExternalForm()));
-        logoImg.setFitHeight(140);
-        logoImg.setFitWidth(120);
+        logoImg.setFitHeight(115);
+        logoImg.setFitWidth(110);
 
         Text appInfo = new Text("SQLines Studio\n  Version: 3.0");
         Text copyrightInfo = new Text("© 2021 SQLines\nAll rights reserved");
