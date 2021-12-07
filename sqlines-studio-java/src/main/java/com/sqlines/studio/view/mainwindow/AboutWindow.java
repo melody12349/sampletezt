@@ -46,7 +46,7 @@ class AboutWindow extends Window {
         initModality(Modality.APPLICATION_MODAL);
         initStyle(StageStyle.UTILITY);
         setTitle("About SQLines Studio");
-        setHeight(270);
+        setHeight(240);
         setWidth(230);
         setResizable(false);
     }
