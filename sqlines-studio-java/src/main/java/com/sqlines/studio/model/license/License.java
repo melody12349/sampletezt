@@ -42,6 +42,11 @@ public class License implements Runnable {
     private final List<LicenseChangeListener> licenseListeners = new ArrayList<>(5);
     private long lastModified;
 
+    /**
+     * Creates a new {@link License} with the specified sqlines command line program.
+     *
+     * @param coreProcess sqlines command line program
+     */
     public License(@NotNull CoreProcess coreProcess) {
         this.coreProcess = coreProcess;
         try {
@@ -108,7 +113,7 @@ public class License implements Runnable {
             throws IOException {
         File licenseFile = getLicenseFile();
         try (FileOutputStream stream = new FileOutputStream(licenseFile)) {
-            String info = "SQLines license file:\n\n" +
+            String info = "SQLines license file:\n" +
                     "\nRegistration Name: " + regName +
                     "\nRegistration Number: " + regNumber;
             stream.write(info.getBytes(StandardCharsets.UTF_8));

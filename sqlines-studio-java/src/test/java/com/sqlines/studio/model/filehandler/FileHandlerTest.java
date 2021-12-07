@@ -76,9 +76,9 @@ public class FileHandlerTest {
     public void shouldNotifyWhenOpeningFiles() throws IOException {
         AtomicBoolean notified = new AtomicBoolean(false);
         fileHandler.addRecentFileListener(change -> {
-            notified.set(true);
-            RecentFilesChangeListener.Change.ChangeType type = change.getChangeType();
-            assertThat(type, equalTo(RecentFilesChangeListener.Change.ChangeType.FILE_ADDED));
+            if (change.getChangeType() == RecentFilesChangeListener.Change.ChangeType.FILE_ADDED) {
+                notified.set(true);
+            }
         });
 
         File file = new File(getClass().getResource("/srcFile1.sql").getPath());
@@ -100,9 +100,9 @@ public class FileHandlerTest {
             FileHandler data = (FileHandler) inStream.readObject();
 
             assertThat(fileHandler.equals(data), equalTo(true));
-        } catch (FileNotFoundException | SecurityException | ClassNotFoundException ignored) {
-        } catch (IOException e) {
-            fail(e.getMessage());
+        } catch (FileNotFoundException | SecurityException ignored) {
+        } catch (ClassNotFoundException e) {
+            fail();e.getMessage();
         }
     }
 }

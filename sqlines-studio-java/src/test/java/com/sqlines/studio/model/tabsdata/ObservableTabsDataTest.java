@@ -96,7 +96,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setCurrTabIndex(0);
 
         assertThat(notified.get(), equalTo(true));
@@ -111,7 +110,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setTabTitle("TITLE", 0);
 
         assertThat(notified.get(), equalTo(true));
@@ -126,7 +124,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setSourceText("TEXT", 0);
 
         assertThat(notified.get(), equalTo(true));
@@ -141,7 +138,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setTargetText("TEXT", 0);
 
         assertThat(notified.get(), equalTo(true));
@@ -156,7 +152,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setSourceMode("MODE", 0);
 
         assertThat(notified.get(), equalTo(true));
@@ -171,7 +166,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setTargetMode("MODE", 0);
 
         assertThat(notified.get(), equalTo(true));
@@ -186,7 +180,6 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setSourceFilePath("PATH", 0);
 
         assertThat(notified.get(), equalTo(true));
@@ -201,14 +194,13 @@ public class ObservableTabsDataTest {
                 notified.set(true);
             }
         });
-
         tabsData.setTargetFilePath("PATH", 0);
 
         assertThat(notified.get(), equalTo(true));
     }
 
     @Test
-    public void shouldWriteToFileWhenSerialized() {
+    public void shouldWriteToFileWhenSerialized() throws IOException {
         tabsData.openTab(0);
         tabsData.setCurrTabIndex(0);
         tabsData.setTabTitle("TITLE", 0);
@@ -226,8 +218,8 @@ public class ObservableTabsDataTest {
             ObservableTabsData data = (ObservableTabsData) inStream.readObject();
 
             assertThat(tabsData.equals(data), equalTo(true));
-        } catch (FileNotFoundException | SecurityException | ClassNotFoundException ignored) {
-        } catch (IOException e) {
+        } catch (FileNotFoundException | SecurityException ignored) {
+        } catch (ClassNotFoundException e) {
             fail(e.getMessage());
         }
     }

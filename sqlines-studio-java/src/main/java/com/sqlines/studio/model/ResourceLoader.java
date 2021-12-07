@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 public class ResourceLoader {
 
     /**
-     * Loads source conversion modes.
+     * Loads source conversion mode from the application resources.
      *
      * @return list of source modes
      *
@@ -60,7 +60,7 @@ public class ResourceLoader {
     }
 
     /**
-     * Loads target conversion modes.
+     * Loads target conversion modes from the application resources.
      *
      * @return list of target modes
      *
@@ -89,7 +89,8 @@ public class ResourceLoader {
     }
 
     /**
-     * Loads a map of conversion modes with their command-line designations.
+     * Loads a map of conversion modes with their command-line
+     * designations from the application resources.
      *
      * @return a map of conversion modes with their command-line designations.
      *
@@ -132,7 +133,7 @@ public class ResourceLoader {
     }
 
     /**
-     * Loads main window light stylesheets.
+     * Loads main window light stylesheets from the application resources.
      *
      * @return main window light stylesheets
      *
@@ -150,7 +151,7 @@ public class ResourceLoader {
     }
 
     /**
-     * Loads main window dark stylesheets.
+     * Loads main window dark stylesheets from the application resources.
      *
      * @return main window dark stylesheets
      *
@@ -169,7 +170,7 @@ public class ResourceLoader {
 
 
     /**
-     * Loads settings window light stylesheets.
+     * Loads settings window light stylesheets from the application resources.
      *
      * @return settings window light stylesheets
      *
@@ -187,7 +188,7 @@ public class ResourceLoader {
     }
 
     /**
-     * Loads settings window dark stylesheets.
+     * Loads settings window dark stylesheets from the application resources.
      *
      * @return settings window dark stylesheets
      *

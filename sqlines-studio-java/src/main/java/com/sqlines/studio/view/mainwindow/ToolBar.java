@@ -300,11 +300,6 @@ class ToolBar extends javafx.scene.control.ToolBar {
             throw new IllegalStateException(errorMsg);
         }
 
-        return new URL[] {
-                newTabImgUrl,
-                openFileImgUrl,
-                saveFileImgUrl,
-                runImgUrl
-        };
+        return new URL[] { newTabImgUrl, openFileImgUrl, saveFileImgUrl, runImgUrl };
     }
 }

@@ -55,12 +55,17 @@ public class Application extends javafx.application.Application {
         try {
             PropertiesLoader.loadProperties();
         } catch (Exception e) {
+            logger.error("init() - " + e.getMessage());
             PropertiesLoader.setDefaults();
         }
 
         String saveSession = System.getProperty("model.save-session");
         if (saveSession.equals("enabled")) {
             deserializeObjects();
+        } else {
+            tabsData = new ObservableTabsData();
+            fileHandler = new FileHandler();
+            fileHandler.setTabsData(tabsData);
         }
     }
 
@@ -105,6 +110,21 @@ public class Application extends javafx.application.Application {
         fileChecker.interrupt();
         licenseChecker.interrupt();
         checkpointThread.interrupt();
+
+        try {
+            int tabsNumber = tabsData.countTabs();
+            for (int i = 0; i < tabsNumber; i++) {
+                if (!tabsData.getSourceFilePath(i).isEmpty()) {
+                    fileHandler.saveSourceFile(i);
+                }
+
+                if (!tabsData.getTargetFilePath(i).isEmpty()) {
+                    fileHandler.saveTargetFile(i);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("stop() - " + e.getMessage());
+        }
 
         saveUISettings();
         PropertiesLoader.saveProperties();

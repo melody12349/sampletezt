@@ -41,10 +41,12 @@ public class Converter {
     private final CoreProcess coreProcess;
 
     /**
+     * Creates a new {@link Converter} with the specified tabsData,
+     * command line modes and sqlines core program.
      *
      * @param tabsData source of tab data to set
-     * @param cmdModes
-     * @param coreProcess
+     * @param cmdModes command line modes
+     * @param coreProcess sqlines command line program
      */
     public Converter(@NotNull ObservableTabsData tabsData,
                      @NotNull Map<String, String> cmdModes,

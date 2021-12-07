@@ -154,6 +154,7 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
     public @NotNull FieldInFocus getFieldInFocus(int tabIndex) {
         // Trows exception if tabIndex is out of valid range
         checkRange(tabIndex, 0, tabBar.getTabs().size());
+
         return inFocus;
     }
 

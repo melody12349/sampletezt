@@ -452,6 +452,10 @@ public class MainWindowPresenter {
     private void runConversionPressed() {
         int currIndex = tabsData.getCurrTabIndex();
         try {
+            if (!tabsData.getSourceFilePath(currIndex).isEmpty()) {
+                fileHandler.saveSourceFile(currIndex);
+            }
+
             Platform.runLater(() -> view.showConversionStart(currIndex));
             converter.run(currIndex);
         } catch (Exception e) {
