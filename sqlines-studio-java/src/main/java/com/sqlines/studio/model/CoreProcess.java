@@ -116,13 +116,15 @@ public class CoreProcess {
 
     private void runAndWait(@NotNull String[] args) throws IOException {
         output = "";
-
         try {
             Process process = new ProcessBuilder(args).start();
+            logger.info("Running SQLines command-line program: " + args);
             process.waitFor();
+            logger.info("SQLines command-line program finished successfully");
             output = new String(process.getInputStream().readAllBytes());
+
         } catch (InterruptedException e) {
-            logger.error("runAndWait() - " + e.getMessage());
+            logger.error("SQLines command-line program crashed: " + e.getMessage());
         }
     }
 }

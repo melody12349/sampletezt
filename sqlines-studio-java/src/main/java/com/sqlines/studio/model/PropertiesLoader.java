@@ -164,7 +164,7 @@ public class PropertiesLoader {
             appPath = appPath.substring(0, appPath.lastIndexOf("/"));
             properties.setProperty("model.app-dir", appPath);
         } catch (Exception e) {
-            logger.error("setDefaults() - " + e.getMessage());
+            logger.error("Loading application dir: " + e.getMessage());
         }
     }
 }

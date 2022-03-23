@@ -53,14 +53,17 @@ public class Application extends javafx.application.Application {
     @Override
     public void init() {
         try {
+            logger.info("Loading properties");
             PropertiesLoader.loadProperties();
+            logger.info("Properties loaded");
         } catch (Exception e) {
-            logger.error("init() - " + e.getMessage());
+            logger.error("Properties loading failed: " + e.getMessage());
             PropertiesLoader.setDefaults();
         }
 
         String saveSession = System.getProperty("model.save-session");
         if (saveSession.equals("enabled")) {
+            logger.info("Loading last state");
             deserializeObjects();
         } else {
             tabsData = new ObservableTabsData();
@@ -107,11 +110,11 @@ public class Application extends javafx.application.Application {
 
     @Override
     public void stop() throws Exception {
-        fileChecker.interrupt();
-        licenseChecker.interrupt();
-        checkpointThread.interrupt();
-
         try {
+            fileChecker.interrupt();
+            licenseChecker.interrupt();
+            checkpointThread.interrupt();
+
             int tabsNumber = tabsData.countTabs();
             for (int i = 0; i < tabsNumber; i++) {
                 if (!tabsData.getSourceFilePath(i).isEmpty()) {
@@ -126,9 +129,14 @@ public class Application extends javafx.application.Application {
             logger.error("stop() - " + e.getMessage());
         }
 
+        logger.info("Saving setting");
         saveUISettings();
         PropertiesLoader.saveProperties();
+        logger.info("Settings saved");
+
+        logger.info("Saving last state");
         serializeObjects();
+        logger.info("Last state saved");
     }
 
     private void runCheckpointLoop() {
@@ -136,10 +144,11 @@ public class Application extends javafx.application.Application {
             try {
                 Thread.sleep(40000);
                 serializeObjects();
+                logger.info("Checkpoint made");
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
-                logger.error("runCheckpointLoop() - " + e.getMessage());
+                logger.error("Checkpoint loop: " + e.getMessage());
             }
         }
     }
@@ -164,7 +173,7 @@ public class Application extends javafx.application.Application {
             tabsData = (ObservableTabsData) tabsDataStream.readObject();
             fileHandler = (FileHandler) fileHandlerStream.readObject();
         } catch (Exception e) {
-            logger.error("init() - Deserialization error: " + e.getMessage());
+            logger.error("Deserialization error: " + e.getMessage());
             tabsData = new ObservableTabsData();
             fileHandler = new FileHandler();
         } finally {

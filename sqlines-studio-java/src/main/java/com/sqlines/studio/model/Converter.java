@@ -121,8 +121,9 @@ public class Converter {
         File file;
         try {
             file = File.createTempFile(tabsData.getTabTitle(tabIndex), ".tmp");
+            logger.info("Created temporary source file: " + file.getAbsolutePath());
         } catch (Exception e) {
-            throw new IOException("Cannot create temp source file", e);
+            throw new IOException("Cannot create temporary source file", e);
         }
 
         try (FileOutputStream stream = new FileOutputStream(file)) {
@@ -141,10 +142,10 @@ public class Converter {
             File file = new File(path);
             boolean success = file.delete();
             if (!success) {
-                logger.error("deleteSourceFile() - Cannot delete source file: " + path);
+                logger.error("Cannot delete source file: " + path);
             }
         } catch (Exception e) {
-            logger.error("deleteSourceFile() - Cannot delete source file: " + e.getMessage());
+            logger.error("Cannot delete source file: " + e.getMessage());
         }
     }
 
@@ -160,6 +161,7 @@ public class Converter {
         }
 
         File targetFile = new File(builder.toString());
+        logger.info("Created target file: " + targetFile.getAbsolutePath());
         boolean success = targetFile.createNewFile();
         if (!success) {
             throw new IOException("Cannot create target file: " + targetFile.getAbsolutePath());
@@ -177,10 +179,10 @@ public class Converter {
             File file = new File(path);
             boolean success = file.delete();
             if (!success) {
-                logger.error("deleteTargetFile() - Cannot delete target file: " + path);
+                logger.error("Cannot delete target file: " + path);
             }
         } catch (Exception e) {
-            logger.error("deleteTargetFile() - Cannot delete target file: " + e.getMessage());
+            logger.error("Cannot delete target file: " + e.getMessage());
         }
     }
 
@@ -188,9 +190,10 @@ public class Converter {
         String path = "";
         try {
             File file = File.createTempFile("sqlines-log", ".tmp");
+            logger.info("Created log file: " + file.getAbsolutePath());
             path = file.getAbsolutePath();
         } catch (Exception e) {
-            logger.error("createLogFile() - Cannot create log file: " + e.getMessage());
+            logger.error("Cannot create log file: " + e.getMessage());
         }
 
         return path;
@@ -205,10 +208,10 @@ public class Converter {
             File file = new File(path);
             boolean success = file.delete();
             if (!success) {
-                logger.error("deleteLogFile() - Cannot delete log file: " + path);
+                logger.error("Cannot delete log file: " + path);
             }
         } catch (Exception e) {
-            logger.error("deleteLogFile() - Cannot delete log file: " + e.getMessage());
+            logger.error("Cannot delete log file: " + e.getMessage());
         }
     }
 }

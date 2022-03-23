@@ -388,7 +388,7 @@ public class FileHandler implements Runnable, Serializable {
             tabsData.setSourceText(text, index);
             sourceFilesLastModified.set(index, file.lastModified());
         } catch (Exception e) {
-            logger.error("updateSourceFile() - " + e.getMessage());
+            logger.error("Updating source file: " + e.getMessage());
         }
     }
 
@@ -414,7 +414,7 @@ public class FileHandler implements Runnable, Serializable {
             tabsData.setTargetText(text, index);
             targetFilesLastModified.set(index, file.lastModified());
         } catch (Exception e) {
-            logger.error("updateTargetFile() - " + e.getMessage());
+            logger.error("Updating target file: " + e.getMessage());
         }
     }
 

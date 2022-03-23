@@ -149,13 +149,14 @@ public class MainWindowPresenter {
             for (int i = 0; i < fileHandler.countRecentFiles(); i++) {
                 view.addRecentFile(fileHandler.getRecentFile(i));
             }
+
+            logger.info("Last state loaded");
         } catch (Exception e) {
-            logger.error("initView() - " + e.getMessage());
+            logger.error("Loading last state failed: " + e.getMessage());
 
             tabsData.removeAllTabs();
             view.closeAllTabs();
             openTabPressed();
-
             fileHandler.clearRecentFiles();
             view.clearRecentFiles();
         }
@@ -345,9 +346,11 @@ public class MainWindowPresenter {
 
     private void openFiles(@NotNull List<File> files) {
         try {
+            logger.info("Opening " + files.size() + " files");
             fileHandler.openSourceFiles(files);
+            logger.info(files.size() + " files opened");
         } catch (Exception e) {
-            view.showError("Filesystem error", e.getMessage());
+            view.showError("File opening error: ", e.getMessage());
         }
     }
 
@@ -359,6 +362,8 @@ public class MainWindowPresenter {
 
         view.openTab(nextIndex);
         tabsData.setCurrTabIndex(nextIndex);
+
+        logger.info("Tab opened. Index: " + nextIndex);
     }
 
     private void closeTabPressed(@NotNull TabCloseEvent closeRequestEvent) {
@@ -377,6 +382,8 @@ public class MainWindowPresenter {
         } else {
             view.setCurrTabIndex(tabIndex);
         }
+
+        logger.info("Tab " + tabIndex + " closed");
     }
 
     private void openFilePressed() {
@@ -399,6 +406,7 @@ public class MainWindowPresenter {
     private void clearRecentFilesPressed() {
         fileHandler.clearRecentFiles();
         view.clearRecentFiles();
+        logger.info("Recent files cleared");
     }
 
     private void saveFilePressed() {
@@ -411,17 +419,21 @@ public class MainWindowPresenter {
                     return;
                 }
 
+                logger.info("Saving source file in tab " + currIndex);
                 fileHandler.saveSourceFile(currIndex);
+                logger.info("Source file saved in tab " + currIndex);
             } else if (inFocus == MainWindowView.FieldInFocus.TARGET) {
                 if (tabsData.getTargetFilePath(currIndex).isEmpty()) {
                     saveFileAsPressed();
                     return;
                 }
 
+                logger.info("Saving target file in tab " + currIndex);
                 fileHandler.saveTargetFile(currIndex);
+                logger.info("Target file saved in tab " + currIndex);
             }
         } catch (Exception e) {
-            logger.error("saveFilePressed() - " + e.getMessage());
+            logger.error("Saving file: " + e.getMessage());
             view.showError("Filesystem error", e.getMessage());
         }
     }
@@ -439,12 +451,16 @@ public class MainWindowPresenter {
 
         try {
             if (inFocus == MainWindowView.FieldInFocus.SOURCE) {
+                logger.info("Saving source file: " + filePath);
                 fileHandler.saveSourceFileAs(currIndex, filePath);
+                logger.info("Source file saved: " + filePath);
             } else if (inFocus == MainWindowView.FieldInFocus.TARGET) {
+                logger.info("Saving target file: " + filePath);
                 fileHandler.saveTargetFileAs(currIndex, filePath);
+                logger.info("Target file saved: " + filePath);
             }
         } catch (Exception e) {
-            logger.error("saveFileAsPressed() - " + e.getMessage());
+            logger.error("Saving file: " + e.getMessage());
             view.showError("Filesystem error", e.getMessage());
         }
     }
@@ -453,14 +469,19 @@ public class MainWindowPresenter {
         int currIndex = tabsData.getCurrTabIndex();
         try {
             if (!tabsData.getSourceFilePath(currIndex).isEmpty()) {
+                logger.info("Saving source file in tab " + currIndex);
                 fileHandler.saveSourceFile(currIndex);
+                logger.info("Source file saved in tab " + currIndex);
             }
 
             Platform.runLater(() -> view.showConversionStart(currIndex));
+            logger.info("Running conversion in tab " + currIndex);
             converter.run(currIndex);
+            logger.info("Conversion ended in tab " + currIndex);
         } catch (Exception e) {
             String errorMsg = "Conversion error in tab " + (currIndex + 1) +
                     ".\n" + e.getMessage();
+            logger.error(errorMsg);
             view.showError("Conversion error", errorMsg);
         } finally {
             Platform.runLater(() -> view.showConversionEnd(currIndex));
@@ -472,7 +493,7 @@ public class MainWindowPresenter {
             try {
                 Desktop.getDesktop().browse(new URI("https://www.sqlines.com/contact-us"));
             } catch (Exception e) {
-               logger.error("openOnlineHelpPressed() - " + e.getMessage());
+               logger.error("Open online help: " + e.getMessage());
             }
         }
     }
@@ -482,7 +503,7 @@ public class MainWindowPresenter {
             try {
                 Desktop.getDesktop().browse(new URI("https://www.sqlines.com"));
             } catch (Exception e) {
-                logger.error("openOnlineHelpPressed() - " + e.getMessage());
+                logger.error("Open site: " + e.getMessage());
             }
         }
     }

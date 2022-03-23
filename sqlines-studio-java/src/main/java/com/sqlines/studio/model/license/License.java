@@ -53,7 +53,7 @@ public class License implements Runnable {
             File file = getLicenseFile();
             lastModified = file.lastModified();
         } catch (Exception e) {
-            logger.error("License() - " + e.getMessage());
+            logger.error("License file not found: " + e.getMessage());
         }
     }
 
@@ -164,9 +164,10 @@ public class License implements Runnable {
         String path = "";
         try {
             File file = File.createTempFile("sqlines-log", ".tmp");
+            logger.error("Log file created: " + file.getAbsolutePath());
             path = file.getAbsolutePath();
         } catch (Exception e) {
-            logger.error("createLogFile() - Cannot create log file: " + e.getMessage());
+            logger.error("Cannot create log file: " + e.getMessage());
         }
 
         return path;
@@ -177,10 +178,10 @@ public class License implements Runnable {
             File file = new File(path);
             boolean success = file.delete();
             if (!success) {
-                logger.error("deleteLogFile() - Cannot delete log file: " + path);
+                logger.error("Cannot delete log file: " + path);
             }
         } catch (Exception e) {
-            logger.error("deleteLogFile() - Cannot delete log file: " + e.getMessage());
+            logger.error("Cannot delete log file: " + e.getMessage());
         }
     }
 }

@@ -115,7 +115,7 @@ public class SettingsPresenter {
         } catch (Exception e) {
             mainWindow.setWindowTitle("SQLINES STUDIO - FOR EVALUATION USE ONLY");
             settingsWindow.setLicenseInfo("License: For evaluation use only");
-            logger.error("checkLicense() - " + e.getMessage());
+            logger.error("License check: " + e.getMessage());
         }
     }
 
@@ -131,7 +131,7 @@ public class SettingsPresenter {
             loadHighlighterSetting();
             loadLineNumbersSetting();
         } catch (Exception e) {
-            logger.error("loadProperties() - " + e.getMessage());
+            logger.error("Loading properties: " + e.getMessage());
             PropertiesLoader.setDefaults();
             loadProperties();
         }
@@ -275,69 +275,81 @@ public class SettingsPresenter {
     private void themeChanged(@NotNull ObservableValue<? extends String> observable,
                               String oldTheme,
                               @NotNull String newTheme) {
-        if (newTheme.equals("Light")) {
-            properties.setProperty("view.theme", "light");
-            windows.forEach(window -> window.setTheme(Window.Theme.LIGHT));
-        } else if (newTheme.equals("Dark")) {
-            properties.setProperty("view.theme", "dark");
-            windows.forEach(window -> window.setTheme(Window.Theme.DARK));
-        }
-
         try {
+            if (newTheme.equals("Light")) {
+                properties.setProperty("view.theme", "light");
+                windows.forEach(window -> window.setTheme(Window.Theme.LIGHT));
+                logger.info("Theme changed. New theme - light");
+            } else if (newTheme.equals("Dark")) {
+                properties.setProperty("view.theme", "dark");
+                windows.forEach(window -> window.setTheme(Window.Theme.DARK));
+                logger.info("Theme changed. New theme - dark");
+            }
+
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void workingDirChanged(@NotNull ObservableValue<? extends String> observable,
                                    String oldDir,
                                    @NotNull String newDir) {
-        properties.setProperty("model.curr-dir", newDir);
-
         try {
+            properties.setProperty("model.curr-dir", newDir);
             PropertiesLoader.saveProperties();
+            logger.info("Working dir changed: " + newDir);
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void addDirPressed() {
-        Optional<String> dir = settingsWindow.choseDirectoryToAdd();
-        dir.ifPresent(file -> {
-            String dirPath = dir.get();
-            properties.setProperty("model.curr-dir", dirPath);
-            int dirsNumber = Integer.parseInt(properties.getProperty("model.dirs-number", "0"));
-            properties.setProperty("model.dir-" + dirsNumber, dirPath);
-            properties.setProperty("model.dirs-number", String.valueOf((dirsNumber + 1)));
-
-            settingsWindow.addDirectory(dirPath);
-            settingsWindow.selectDirectory(dirPath);
-        });
-
         try {
-            PropertiesLoader.saveProperties();
+            Optional<String> dir = settingsWindow.choseDirectoryToAdd();
+            if (dir.isPresent()) {
+                String dirPath = dir.get();
+                properties.setProperty("model.curr-dir", dirPath);
+                int dirsNumber = Integer.parseInt(properties.getProperty("model.dirs-number", "0"));
+                properties.setProperty("model.dir-" + dirsNumber, dirPath);
+                properties.setProperty("model.dirs-number", String.valueOf((dirsNumber + 1)));
+
+                settingsWindow.addDirectory(dirPath);
+                settingsWindow.selectDirectory(dirPath);
+
+                PropertiesLoader.saveProperties();
+                logger.info("New dir added: " + dir.get());
+            }
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void saveLastSessionPressed() {
-        String policy = properties.getProperty("model.save-session");
-        if (policy.equals("enabled")) {
-            properties.setProperty("model.save-session", "disabled");
-        } else if (policy.equals("disabled")) {
-            properties.setProperty("model.save-session", "enabled");
-        }
-
         try {
+            String policy = properties.getProperty("model.save-session");
+            if (policy.equals("enabled")) {
+                properties.setProperty("model.save-session", "disabled");
+            } else if (policy.equals("disabled")) {
+                properties.setProperty("model.save-session", "enabled");
+            }
+
+
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
@@ -346,117 +358,140 @@ public class SettingsPresenter {
             PropertiesLoader.setDefaults();
             loadProperties();
             PropertiesLoader.saveProperties();
+            logger.info("Default settings set");
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void changeLicensePressed(@NotNull ChangeLicenseEvent event) {
         try {
             license.changeLicense(event.getRegName(), event.getRegNumber());
+            logger.info("License status changed");
         } catch (Exception e) {
-            settingsWindow.showError("Error", e.getMessage());
+            settingsWindow.showError("Change license status: ", e.getMessage());
         }
     }
 
     private void changeStatusBarPolicyPressed() {
-        String policy = properties.getProperty("view.status-bar", "show");
-        if (policy.equals("show")) {
-            properties.setProperty("view.status-bar", "do-not-show");
-            mainWindow.setStatusBarPolicy(MainWindowSettingsView.StatusBarPolicy.DO_NOT_SHOW);
-            settingsWindow.setStatusBarSelected(false);
-        } else if (policy.equals("do-not-show")) {
-            properties.setProperty("view.status-bar", "show");
-            mainWindow.setStatusBarPolicy(MainWindowSettingsView.StatusBarPolicy.SHOW);
-            settingsWindow.setStatusBarSelected(true);
-        }
-
         try {
+            String policy = properties.getProperty("view.status-bar", "show");
+            if (policy.equals("show")) {
+                properties.setProperty("view.status-bar", "do-not-show");
+                mainWindow.setStatusBarPolicy(MainWindowSettingsView.StatusBarPolicy.DO_NOT_SHOW);
+                settingsWindow.setStatusBarSelected(false);
+                logger.info("Status bar policy changed. New policy: Do not show");
+            } else if (policy.equals("do-not-show")) {
+                properties.setProperty("view.status-bar", "show");
+                mainWindow.setStatusBarPolicy(MainWindowSettingsView.StatusBarPolicy.SHOW);
+                settingsWindow.setStatusBarSelected(true);
+                logger.info("Status bar policy changed. New policy: Show");
+            }
+
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void changeTargetFieldPolicyPressed() {
-        String policy = properties.getProperty("view.target-field", "as-needed");
-        if (policy.equals("always")) {
-            properties.setProperty("view.target-field", "as-needed");
-            mainWindow.setTargetFieldPolicy(MainWindowSettingsView.TargetFieldPolicy.AS_NEEDED);
-            settingsWindow.setTargetFieldSelected(false);
-        } else if (policy.equals("as-needed")) {
-            properties.setProperty("view.target-field", "always");
-            mainWindow.setTargetFieldPolicy(MainWindowSettingsView.TargetFieldPolicy.ALWAYS);
-            settingsWindow.setTargetFieldSelected(true);
-        }
-
         try {
+            String policy = properties.getProperty("view.target-field", "as-needed");
+            if (policy.equals("always")) {
+                properties.setProperty("view.target-field", "as-needed");
+                mainWindow.setTargetFieldPolicy(MainWindowSettingsView.TargetFieldPolicy.AS_NEEDED);
+                settingsWindow.setTargetFieldSelected(false);
+                logger.info("Target field policy changed. New policy: As needed");
+            } else if (policy.equals("as-needed")) {
+                properties.setProperty("view.target-field", "always");
+                mainWindow.setTargetFieldPolicy(MainWindowSettingsView.TargetFieldPolicy.ALWAYS);
+                settingsWindow.setTargetFieldSelected(true);
+                logger.info("Target field policy changed. New policy: Always");
+            }
+
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void changeWrappingPolicyPressed() {
-        String policy = properties.getProperty("view.wrapping", "enabled");
-        if (policy.equals("enabled")) {
-            properties.setProperty("view.wrapping", "disabled");
-            mainWindow.setWrappingPolicy(MainWindowSettingsView.WrappingPolicy.NO_WRAP);
-            settingsWindow.setWrappingSelected(false);
-        } else if (policy.equals("disabled")) {
-            properties.setProperty("view.wrapping", "enabled");
-            mainWindow.setWrappingPolicy(MainWindowSettingsView.WrappingPolicy.WRAP_LINES);
-            settingsWindow.setWrappingSelected(true);
-        }
-
         try {
+            String policy = properties.getProperty("view.wrapping", "enabled");
+            if (policy.equals("enabled")) {
+                properties.setProperty("view.wrapping", "disabled");
+                mainWindow.setWrappingPolicy(MainWindowSettingsView.WrappingPolicy.NO_WRAP);
+                settingsWindow.setWrappingSelected(false);
+                logger.info("Wrapping policy changed. New policy: No wrap");
+            } else if (policy.equals("disabled")) {
+                properties.setProperty("view.wrapping", "enabled");
+                mainWindow.setWrappingPolicy(MainWindowSettingsView.WrappingPolicy.WRAP_LINES);
+                settingsWindow.setWrappingSelected(true);
+                logger.info("Wrapping policy changed. New policy: Wrap lines");
+            }
+
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     public void changeHighlighterPolicePressed() {
-        String policy = properties.getProperty("view.highlighter", "enabled");
-        if (policy.equals("enabled")) {
-            properties.setProperty("view.highlighter", "disabled");
-            mainWindow.setHighlighterPolicy(MainWindowSettingsView.HighlighterPolicy.DO_NOT_HIGHLIGHT);
-            settingsWindow.setHighlighterSelected(false);
-        } else if (policy.equals("disabled")) {
-            properties.setProperty("view.highlighter", "enabled");
-            mainWindow.setHighlighterPolicy(MainWindowSettingsView.HighlighterPolicy.HIGHLIGHT);
-            settingsWindow.setHighlighterSelected(true);
-        }
-
         try {
+            String policy = properties.getProperty("view.highlighter", "enabled");
+            if (policy.equals("enabled")) {
+                properties.setProperty("view.highlighter", "disabled");
+                mainWindow.setHighlighterPolicy(MainWindowSettingsView.HighlighterPolicy.DO_NOT_HIGHLIGHT);
+                settingsWindow.setHighlighterSelected(false);
+                logger.info("Highlighter policy changed. New policy: Do not highlight");
+            } else if (policy.equals("disabled")) {
+                properties.setProperty("view.highlighter", "enabled");
+                mainWindow.setHighlighterPolicy(MainWindowSettingsView.HighlighterPolicy.HIGHLIGHT);
+                settingsWindow.setHighlighterSelected(true);
+                logger.info("Highlighter policy changed. New policy: Highlight");
+            }
+
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 
     private void changeLineNumbersPolicyPressed() {
-        String policy = properties.getProperty("view.line-numbers", "enabled");
-        if (policy.equals("enabled")) {
-            properties.setProperty("view.line-numbers", "disabled");
-            mainWindow.setLineNumbersPolicy(MainWindowSettingsView.LineNumbersPolicy.DO_NOT_SHOW);
-            settingsWindow.setLineNumbersSelected(false);
-        } else if (policy.equals("disabled")) {
-            properties.setProperty("view.line-numbers", "enabled");
-            mainWindow.setLineNumbersPolicy(MainWindowSettingsView.LineNumbersPolicy.SHOW);
-            settingsWindow.setLineNumbersSelected(true);
-        }
-
         try {
+            String policy = properties.getProperty("view.line-numbers", "enabled");
+            if (policy.equals("enabled")) {
+                properties.setProperty("view.line-numbers", "disabled");
+                mainWindow.setLineNumbersPolicy(MainWindowSettingsView.LineNumbersPolicy.DO_NOT_SHOW);
+                settingsWindow.setLineNumbersSelected(false);
+                logger.info("Line numbers area policy changed. New policy: Do not show");
+            } else if (policy.equals("disabled")) {
+                properties.setProperty("view.line-numbers", "enabled");
+                mainWindow.setLineNumbersPolicy(MainWindowSettingsView.LineNumbersPolicy.SHOW);
+                settingsWindow.setLineNumbersSelected(true);
+                logger.info("Line numbers area policy changed. New policy: Show");
+            }
             PropertiesLoader.saveProperties();
         } catch (Exception e) {
-            settingsWindow.showError("Error", "An error occurred while " +
-                    "saving the settings.\n" + e.getMessage());
+            String errorMsg = "An error occurred while " +
+                    "saving the settings.\n" + e.getMessage();
+            logger.error(errorMsg);
+            settingsWindow.showError("Error", errorMsg);
         }
     }
 }
