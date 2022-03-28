@@ -38,6 +38,7 @@ import org.apache.logging.log4j.LogManager;
  * | model.curr-dir     | path                  | Current working directory path  |
  * | model.dirs-number  | int                   | The number of added directories |
  * | model.dir-i        | path                  | Added directory. i - dir index  |
+ * | model.last-dir     | path                  | Last opened directory           |
  * | model.app-dir      | path                  | Jar directory path              |
  * | view.theme         | "light", "dark"       | Current theme                   |
  * | view.status-bar    | "show", "do-not-show" | Status bar policy               |
@@ -72,6 +73,7 @@ public class PropertiesLoader {
      * | model.curr-dir     | properties.getProperty("user.home")      |
      * | model.dirs-number  | 0                                        |
      * | model.app-dir      | jar path                                 |
+     * | model.last-dir     | "null"                                   |
      * | view.theme         | "light"                                  |
      * | view.status-bar    | "show"                                   |
      * | view.target-field  | "as-needed"                              |
@@ -94,6 +96,7 @@ public class PropertiesLoader {
         properties.setProperty("model.save-session", "enabled");
         properties.setProperty("model.curr-dir", properties.getProperty("user.home"));
         properties.setProperty("model.dirs-number", "0");
+        properties.setProperty("model.last-dir", "null");
         properties.setProperty("view.theme", "light");
         properties.setProperty("view.status-bar", "show");
         properties.setProperty("view.target-field", "as-needed");

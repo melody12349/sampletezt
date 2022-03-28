@@ -187,10 +187,12 @@ public interface MainWindowView extends BaseView {
     /**
      * Shows a window prompting the user to select files to open.
      *
+     * @param initialDir initial search directory
+     *
      * @return a list of selected files or {@link Optional#empty()}
      * if the user did not select any file
      */
-    @NotNull Optional<List<File>> choseFilesToOpen();
+    @NotNull Optional<List<File>> choseFilesToOpen(Optional<File> initialDir);
 
     /**
      * Shows a window prompting the user to choose where to save a file.

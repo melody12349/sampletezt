@@ -672,8 +672,9 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
     }
 
     @Override
-    public @NotNull Optional<List<File>> choseFilesToOpen() {
+    public @NotNull Optional<List<File>> choseFilesToOpen(Optional<File> initialDir) {
         FileChooser chooser = new FileChooser();
+        initialDir.ifPresent(chooser::setInitialDirectory);
         List<File> files = chooser.showOpenMultipleDialog(this);
         if (files != null) {
             return Optional.of(files);

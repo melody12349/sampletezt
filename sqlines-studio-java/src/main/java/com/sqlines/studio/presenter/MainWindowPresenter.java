@@ -393,7 +393,11 @@ public class MainWindowPresenter {
     }
 
     private void openFilePressed() {
-        Optional<List<File>> selectedFiles = view.choseFilesToOpen();
+        String lastDir = System.getProperties().getProperty("model.last-dir", null);
+        Optional<File> initialDir = Optional.ofNullable(lastDir)
+                .flatMap(path -> (path.equals("null") ? Optional.empty() : Optional.of(path)))
+                .flatMap(path -> Optional.of(new File(path)));
+        Optional<List<File>> selectedFiles = view.choseFilesToOpen(initialDir);
         if (selectedFiles.isEmpty()) {
             logger.info("No files to open");
             return;

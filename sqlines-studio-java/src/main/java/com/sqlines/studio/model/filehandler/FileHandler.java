@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -227,6 +228,8 @@ public class FileHandler implements Runnable, Serializable {
                 tabsData.setTabTitle(file.getName(), currIndex);
                 sourceFilesLastModified.set(currIndex, file.lastModified());
 
+                String lastOpenedDir = file.getParentFile().getAbsolutePath();
+                System.getProperties().setProperty("model.last-dir", lastOpenedDir);
                 changeRecentFiles(file);
             }
         }
