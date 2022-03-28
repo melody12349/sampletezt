@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.view;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.geometry.Insets;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
@@ -32,13 +30,15 @@ import javafx.stage.StageStyle;
 
 import java.net.URL;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Provides a message for informing the user about an occurred error.
  */
 public class ErrorWindow extends Window {
 
     /**
-     * Creates a new {@link ErrorWindow} with the specified window title and message.
+     * Constructs a new ErrorWindow with the specified window title and message.
      *
      * @param title window title to set
      * @param message error message to show

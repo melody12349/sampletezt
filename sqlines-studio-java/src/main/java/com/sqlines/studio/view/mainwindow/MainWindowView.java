@@ -24,8 +24,6 @@ import com.sqlines.studio.view.mainwindow.listener.ModeChangeListener;
 import com.sqlines.studio.view.mainwindow.listener.TabTitleChangeListener;
 import com.sqlines.studio.view.mainwindow.listener.TextChangeListener;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -34,6 +32,8 @@ import javafx.scene.input.DragEvent;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface through with the presenter / controller can interact with the main window UI.

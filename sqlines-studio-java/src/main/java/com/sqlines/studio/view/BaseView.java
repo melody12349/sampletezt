@@ -16,10 +16,10 @@
 
 package com.sqlines.studio.view;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface through with the presenter / controller can interact with UI.
@@ -33,7 +33,7 @@ public interface BaseView {
     void show();
 
     /**
-     * Whether or not this window is showing (that is, open on the user's system).
+     * Whether this window is showing (that is, open on the user's system).
      * The window might be "showing", yet the user might not be able to see it due to the window being
      * rendered behind another window or due to the Window being positioned off the monitor.
      *

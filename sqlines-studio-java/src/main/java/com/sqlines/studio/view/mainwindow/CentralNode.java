@@ -18,11 +18,11 @@ package com.sqlines.studio.view.mainwindow;
 
 import com.sqlines.studio.view.mainwindow.editor.CodeEditor;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Central control in the main window.

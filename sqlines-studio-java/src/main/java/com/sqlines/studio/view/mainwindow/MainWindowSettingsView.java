@@ -17,10 +17,11 @@
 package com.sqlines.studio.view.mainwindow;
 
 import com.sqlines.studio.view.BaseView;
-import org.jetbrains.annotations.NotNull;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface through with the presenter / controller can interact with the main window UI.

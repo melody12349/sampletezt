@@ -19,16 +19,17 @@ package com.sqlines.studio.model.license;
 import com.sqlines.studio.model.CoreProcess;
 import com.sqlines.studio.model.license.listener.LicenseChangeListener;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Works with license file.
@@ -43,7 +44,7 @@ public class License implements Runnable {
     private long lastModified;
 
     /**
-     * Creates a new {@link License} with the specified sqlines command line program.
+     * Constructs a new License with the specified sqlines command line program.
      *
      * @param coreProcess sqlines command line program
      */
@@ -55,6 +56,16 @@ public class License implements Runnable {
         } catch (Exception e) {
             logger.error("License file not found: " + e.getMessage());
         }
+    }
+
+    private @NotNull File getLicenseFile() {
+        String path = System.getProperty("model.app-dir", "null") + "/license.txt";
+        File licenseFile = new File(path);
+        if (!licenseFile.exists()) {
+            throw new IllegalStateException("File not found: " + path);
+        }
+
+        return licenseFile;
     }
 
     @Override
@@ -69,6 +80,19 @@ public class License implements Runnable {
                 logger.error("run() - " + e.getMessage());
                 break;
             }
+        }
+    }
+
+    private synchronized void monitorLicenseFile() {
+        File file = getLicenseFile();
+        if (file.lastModified() != lastModified) {
+            if (isActive()) {
+                licenseListeners.forEach(license -> license.changed(true));
+            } else {
+                licenseListeners.forEach(license -> license.changed(false));
+            }
+
+            lastModified = file.lastModified();
         }
     }
 
@@ -92,6 +116,31 @@ public class License implements Runnable {
 
         String out = coreProcess.getOutput();
         return !out.contains("FOR EVALUATION USE ONLY");
+    }
+
+    private @NotNull String createLogFile() {
+        String path = "";
+        try {
+            File file = File.createTempFile("sqlines-log", ".tmp");
+            logger.error("Log file created: " + file.getAbsolutePath());
+            path = file.getAbsolutePath();
+        } catch (Exception e) {
+            logger.error("Cannot create log file: " + e.getMessage());
+        }
+
+        return path;
+    }
+
+    private void deleteLogFile(@NotNull String path) {
+        try {
+            File file = new File(path);
+            boolean success = file.delete();
+            if (!success) {
+                logger.error("Cannot delete log file: " + path);
+            }
+        } catch (Exception e) {
+            logger.error("Cannot delete log file: " + e.getMessage());
+        }
     }
 
     /**
@@ -135,53 +184,5 @@ public class License implements Runnable {
      */
     public synchronized void addLicenseListener(@NotNull LicenseChangeListener listener) {
         licenseListeners.add(listener);
-    }
-
-    private @NotNull File getLicenseFile() {
-        String path = System.getProperty("model.app-dir", "null") + "/license.txt";
-        File licenseFile = new File(path);
-        if (!licenseFile.exists()) {
-            throw new IllegalStateException("File not found: " + path);
-        }
-
-        return licenseFile;
-    }
-
-    private synchronized void monitorLicenseFile() {
-        File file = getLicenseFile();
-        if (file.lastModified() != lastModified) {
-            if (isActive()) {
-                licenseListeners.forEach(license -> license.changed(true));
-            } else {
-                licenseListeners.forEach(license -> license.changed(false));
-            }
-
-            lastModified = file.lastModified();
-        }
-    }
-
-    private @NotNull String createLogFile() {
-        String path = "";
-        try {
-            File file = File.createTempFile("sqlines-log", ".tmp");
-            logger.error("Log file created: " + file.getAbsolutePath());
-            path = file.getAbsolutePath();
-        } catch (Exception e) {
-            logger.error("Cannot create log file: " + e.getMessage());
-        }
-
-        return path;
-    }
-
-    private void deleteLogFile(@NotNull String path) {
-        try {
-            File file = new File(path);
-            boolean success = file.delete();
-            if (!success) {
-                logger.error("Cannot delete log file: " + path);
-            }
-        } catch (Exception e) {
-            logger.error("Cannot delete log file: " + e.getMessage());
-        }
     }
 }

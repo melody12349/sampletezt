@@ -16,15 +16,16 @@
 
 package com.sqlines.studio.view.mainwindow.editor;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- * A popup control that appears when you right-click on the {@link CodeEditor}.
+ * A popup control that appears on the right-click.
  * <p>
  * Contains the following menu items:
  * <li>Undo
@@ -33,10 +34,8 @@ import javafx.scene.control.SeparatorMenuItem;
  * <li>Cut
  * <li>Copy
  * <li>Paste
- *
- * @apiNote Initially, all menu items are active.
  */
-class ContextMenu extends javafx.scene.control.ContextMenu {
+class EditorContextMenu extends ContextMenu {
     private final MenuItem undoMenuItem = new MenuItem();
     private final MenuItem redoMenuItem = new MenuItem();
     private final MenuItem selectAllMenuItem = new MenuItem();
@@ -44,7 +43,7 @@ class ContextMenu extends javafx.scene.control.ContextMenu {
     private final MenuItem copyMenuItem = new MenuItem();
     private final MenuItem pasteMenuItem = new MenuItem();
 
-    public ContextMenu() {
+    public EditorContextMenu() {
         undoMenuItem.setText("Undo");
         redoMenuItem.setText("Redo");
         selectAllMenuItem.setText("Select All");
@@ -62,7 +61,7 @@ class ContextMenu extends javafx.scene.control.ContextMenu {
      *
      * @param isEnabled makes the menu item enabled if true, disabled otherwise
      */
-    public void setUndoState(boolean isEnabled) {
+    public void setUndoEnabled(boolean isEnabled) {
         undoMenuItem.setDisable(!isEnabled);
     }
 
@@ -71,7 +70,7 @@ class ContextMenu extends javafx.scene.control.ContextMenu {
      *
      * @param isEnabled makes the menu item enabled if true, disabled otherwise
      */
-    public void setRedoState(boolean isEnabled) {
+    public void setRedoEnabled(boolean isEnabled) {
         redoMenuItem.setDisable(!isEnabled);
     }
 

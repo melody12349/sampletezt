@@ -16,14 +16,18 @@
 
 package com.sqlines.studio.model;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.function.Consumer;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Works with application resources.
@@ -167,8 +171,7 @@ public class ResourceLoader {
 
         return mainDark.toExternalForm();
     }
-
-
+    
     /**
      * Loads settings window light stylesheets from the application resources.
      *

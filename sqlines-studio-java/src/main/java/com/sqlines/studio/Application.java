@@ -28,13 +28,16 @@ import com.sqlines.studio.presenter.SettingsPresenter;
 import com.sqlines.studio.view.mainwindow.MainWindow;
 import com.sqlines.studio.view.settings.SettingsWindow;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import javafx.stage.Stage;
 
-import java.io.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Arrays;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Application extends javafx.application.Application {
     private static final Logger logger = LogManager.getLogger(Application.class);

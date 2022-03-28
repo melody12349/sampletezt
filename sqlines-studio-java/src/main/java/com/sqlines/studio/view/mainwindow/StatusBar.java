@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.view.mainwindow;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.ToolBar;
@@ -26,6 +24,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Horizontal bar containing 2 text areas:

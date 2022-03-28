@@ -20,14 +20,14 @@ import com.sqlines.studio.model.Converter;
 import com.sqlines.studio.model.filehandler.FileHandler;
 import com.sqlines.studio.model.filehandler.listener.RecentFilesChangeListener;
 import com.sqlines.studio.model.tabsdata.ObservableTabsData;
-import com.sqlines.studio.model.tabsdata.listener.*;
+import com.sqlines.studio.model.tabsdata.listener.TabsChangeListener;
+import com.sqlines.studio.model.tabsdata.listener.TabIndexChangeListener;
+import com.sqlines.studio.model.tabsdata.listener.TabTitleChangeListener;
+import com.sqlines.studio.model.tabsdata.listener.TextChangeListener;
+import com.sqlines.studio.model.tabsdata.listener.ModeChangeListener;
 import com.sqlines.studio.view.mainwindow.MainWindowView;
 import com.sqlines.studio.view.mainwindow.event.RecentFileEvent;
 import com.sqlines.studio.view.mainwindow.event.TabCloseEvent;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -43,6 +43,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Responds to user actions in the main window.
@@ -86,6 +91,14 @@ public class MainWindowPresenter {
         viewSourceTextListener = this::viewSourceTextChanged;
         viewTargetTextListener = this::viewTargetTextChanged;
 
+        initHandlers();
+        initView();
+        view.show();
+    }
+
+    private void initHandlers() {
+        fileHandler.addRecentFileListener(this::modelRecentFilesChanged);
+
         tabsData.addTabsListener(modelTabsListener);
         tabsData.addTabIndexListener(modelIndexListener);
         tabsData.addTabTitleListener(modelTabTitleListener);
@@ -95,8 +108,6 @@ public class MainWindowPresenter {
         tabsData.addTargetTextListener(modelTargetTextListener);
         tabsData.addSourceFilePathListener(this::modelSourcePathChanged);
         tabsData.addTargetFilePathListener(this::modelTargetPathChanged);
-
-        fileHandler.addRecentFileListener(this::modelRecentFilesChanged);
 
         view.addTabSelectionListener(viewTabIndexListener);
         view.addTabTitleListener(viewTabTitleListener);
@@ -117,9 +128,6 @@ public class MainWindowPresenter {
         view.setOnRunAction(event -> runConversionPressed());
         view.setOnOnlineHelpAction(event -> openOnlineHelpPressed());
         view.setOnOpenSiteAction(event -> openSitePressed());
-
-        initView();
-        view.show();
     }
 
     private void initView() {
@@ -143,7 +151,6 @@ public class MainWindowPresenter {
                 modelSourceTextChanged(tabsData.getSourceText(i), i);
                 modelTargetTextChanged(tabsData.getTargetText(i), i);
             }
-
             tabsData.setCurrTabIndex(currIndex);
 
             for (int i = 0; i < fileHandler.countRecentFiles(); i++) {
@@ -153,7 +160,6 @@ public class MainWindowPresenter {
             logger.info("Last state loaded");
         } catch (Exception e) {
             logger.error("Loading last state failed: " + e.getMessage());
-
             tabsData.removeAllTabs();
             view.closeAllTabs();
             openTabPressed();
@@ -348,7 +354,7 @@ public class MainWindowPresenter {
         try {
             logger.info("Opening " + files.size() + " files");
             fileHandler.openSourceFiles(files);
-            logger.info(files.size() + " files opened");
+            logger.info(files.size() + " files opened: " + files);
         } catch (Exception e) {
             view.showError("File opening error: ", e.getMessage());
         }
@@ -389,6 +395,7 @@ public class MainWindowPresenter {
     private void openFilePressed() {
         Optional<List<File>> selectedFiles = view.choseFilesToOpen();
         if (selectedFiles.isEmpty()) {
+            logger.info("No files to open");
             return;
         }
 

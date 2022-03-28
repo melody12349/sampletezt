@@ -16,25 +16,32 @@
 
 package com.sqlines.studio.view.mainwindow.editor;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.fxmisc.richtext.GenericStyledArea;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
-import org.reactfx.collection.ListModification;
-import org.jetbrains.annotations.NotNull;
-
 import javafx.application.Platform;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.StringTokenizer;
+import java.util.List;
+import java.util.LinkedList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.fxmisc.richtext.GenericStyledArea;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
+
+import org.reactfx.collection.ListModification;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Highlights the specified text according to the highlighting patterns.
@@ -60,7 +67,7 @@ class Highlighter {
                             + "|(?<COMMENT>" + commentRegex + ")", Pattern.CASE_INSENSITIVE
             );
         } catch (Exception e) {
-            logger.error("static() - " + e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 
@@ -69,7 +76,7 @@ class Highlighter {
      *
      * @param text text to highlight
      *
-     * @return a list of {@link org.fxmisc.richtext.model.StyleSpan} objects.
+     * @return style spans
      */
     public @NotNull StyleSpans<Collection<String>> computeHighlighting(@NotNull String text) {
         StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
@@ -132,7 +139,7 @@ class VisibleParagraphStyler<PS, SEG, S>
     private int prevTextLength;
 
     /**
-     * Creates a new {@link VisibleParagraphStyler} with the specified
+     * Constructs a new VisibleParagraphStyler with the specified
      * text-editing area and highlighting function.
      *
      * @param area text-editing area to set

@@ -16,13 +16,12 @@
 
 package com.sqlines.studio.view.mainwindow;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.Separator;
 import javafx.scene.image.Image;
@@ -33,6 +32,8 @@ import javafx.scene.text.Text;
 
 import java.net.URL;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Horizontal bar containing icons used to select the application's most frequently used tools.
@@ -45,7 +46,7 @@ import java.util.List;
  * <li>Source modes choice box
  * <li>Target modes choice box
  */
-class ToolBar extends javafx.scene.control.ToolBar {
+class MainToolBar extends ToolBar {
     private final Button newTabButton = new Button();
     private final Button openFileButton = new Button();
     private final Button saveFileButton = new Button();
@@ -54,12 +55,12 @@ class ToolBar extends javafx.scene.control.ToolBar {
     private final ChoiceBox<String> targetModesBox = new ChoiceBox<>();
 
     /**
-     * Creates a new {@link ToolBar}.
+     * Constructs a new MainToolBar.
      *
      * @throws IllegalStateException if any of the toolbar icons
      * were not found in application resources
      */
-    public ToolBar() {
+    public MainToolBar() {
         // Stop the tab key and the arrow keys from navigating through the controls
         addEventFilter(KeyEvent.ANY, keyEvent -> {
             if (keyEvent.getCode() == KeyCode.TAB
@@ -71,27 +72,27 @@ class ToolBar extends javafx.scene.control.ToolBar {
             }
         });
 
-        URL[] resources = loadResources();
+        URL[] icons = loadIcons();
 
-        ImageView newTabImg = new ImageView(new Image(resources[0].toExternalForm()));
+        ImageView newTabImg = new ImageView(new Image(icons[0].toExternalForm()));
         newTabImg.setFitHeight(17);
         newTabImg.setFitWidth(17);
         newTabButton.setGraphic(newTabImg);
         newTabButton.setTooltip(new Tooltip("New tab"));
 
-        ImageView openFileImg = new ImageView(new Image(resources[1].toExternalForm()));
+        ImageView openFileImg = new ImageView(new Image(icons[1].toExternalForm()));
         openFileImg.setFitHeight(17);
         openFileImg.setFitWidth(17);
         openFileButton.setGraphic(openFileImg);
         openFileButton.setTooltip(new Tooltip("Open file"));
 
-        ImageView saveFileImg = new ImageView(new Image(resources[2].toExternalForm()));
+        ImageView saveFileImg = new ImageView(new Image(icons[2].toExternalForm()));
         saveFileImg.setFitHeight(17);
         saveFileImg.setFitWidth(17);
         saveFileButton.setGraphic(saveFileImg);
         saveFileButton.setTooltip(new Tooltip("Save file"));
 
-        ImageView runImg = new ImageView(new Image(resources[3].toExternalForm()));
+        ImageView runImg = new ImageView(new Image(icons[3].toExternalForm()));
         runImg.setFitHeight(17);
         runImg.setFitWidth(17);
         runButton.setGraphic(runImg);
@@ -108,6 +109,34 @@ class ToolBar extends javafx.scene.control.ToolBar {
         getItems().add(new Separator());
         getItems().addAll(new Text(" Source:  "), sourceModesBox,
                 new Text(" Target:  "), targetModesBox);
+    }
+
+    private @NotNull URL[] loadIcons() {
+        URL newTabImgUrl = getClass().getResource("/icons/open-tab.png");
+        if (newTabImgUrl == null) {
+            String errorMsg = "File not found in application resources: icons/open-tab.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        URL openFileImgUrl = getClass().getResource("/icons/open-file.png");
+        if (openFileImgUrl == null) {
+            String errorMsg = "File not found in application resources: icons/open-file.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        URL saveFileImgUrl = getClass().getResource("/icons/save-file.png");
+        if (saveFileImgUrl == null) {
+            String errorMsg = "File not found in application resources: icons/save-file.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        URL runImgUrl = getClass().getResource("/icons/run.png");
+        if (runImgUrl == null) {
+            String errorMsg = "File not found in application resources: icons/run.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        return new URL[] { newTabImgUrl, openFileImgUrl, saveFileImgUrl, runImgUrl };
     }
 
     /**
@@ -139,7 +168,7 @@ class ToolBar extends javafx.scene.control.ToolBar {
     }
 
     /**
-     * Appends all of the elements from the list to the source modes check box.
+     * Appends all the elements from the list to the source modes check box.
      * <p>
      * Selects the first mode from the list as current.
      *
@@ -157,7 +186,7 @@ class ToolBar extends javafx.scene.control.ToolBar {
     }
 
     /**
-     * Appends all of the elements from the list to the target modes check box.
+     * Appends all the elements from the list to the target modes check box.
      * <p>
      * Selects the first mode from the list as current.
      *
@@ -210,7 +239,7 @@ class ToolBar extends javafx.scene.control.ToolBar {
      *
      * @param listener the listener to register
      */
-    public void addSourceModeChangeListener(@NotNull ChangeListener<String> listener) {
+    public void addSourceModeListener(@NotNull ChangeListener<String> listener) {
        sourceModesBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
@@ -220,7 +249,7 @@ class ToolBar extends javafx.scene.control.ToolBar {
      *
      * @param listener the listener to register
      */
-    public void addTargetModeChangeListener(@NotNull ChangeListener<String> listener) {
+    public void addTargetModeListener(@NotNull ChangeListener<String> listener) {
         targetModesBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
@@ -230,7 +259,7 @@ class ToolBar extends javafx.scene.control.ToolBar {
      *
      * @param listener the listener to register
      */
-    public void addFocusChangeListener(@NotNull ChangeListener<Boolean> listener) {
+    public void addFocusListener(@NotNull ChangeListener<Boolean> listener) {
         newTabButton.focusedProperty().addListener(listener);
         openFileButton.focusedProperty().addListener(listener);
         saveFileButton.focusedProperty().addListener(listener);
@@ -273,33 +302,5 @@ class ToolBar extends javafx.scene.control.ToolBar {
      */
     public void setOnRunAction(@NotNull EventHandler<ActionEvent> action) {
         runButton.setOnAction(action);
-    }
-
-    private @NotNull URL[] loadResources() {
-        URL newTabImgUrl = getClass().getResource("/icons/open-tab.png");
-        if (newTabImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/open-tab.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        URL openFileImgUrl = getClass().getResource("/icons/open-file.png");
-        if (openFileImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/open-file.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        URL saveFileImgUrl = getClass().getResource("/icons/save-file.png");
-        if (saveFileImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/save-file.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        URL runImgUrl = getClass().getResource("/icons/run.png");
-        if (runImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/run.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        return new URL[] { newTabImgUrl, openFileImgUrl, saveFileImgUrl, runImgUrl };
     }
 }

@@ -16,15 +16,15 @@
 
 package com.sqlines.studio.model;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Properties;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Loads the application properties into the standard {@link Properties} class.
@@ -60,50 +60,6 @@ public class PropertiesLoader {
 
     static {
         setDefaults();
-    }
-
-    /**
-     * Loads properties from the properties file.
-     *
-     * @throws FileNotFoundException if the file does not exist, is a directory rather
-     * than a regular file, or for some other reason cannot be opened for reading.
-     * @throws IOException - if any IO error occurred
-     * @throws SecurityException if a security manager exists and its
-     * checkRead method denies read access to the file
-     */
-    public static void loadProperties() throws IOException {
-        String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
-        File propertiesFile = new File(path);
-        try (FileInputStream stream = new FileInputStream(propertiesFile)) {
-            properties.load(stream);
-            loadAppDir();
-        }
-    }
-
-    /**
-     * Saves application properties to the properties file.
-     *
-     * @throws FileNotFoundException if the file does not exist, is a directory rather
-     * than a regular file, or for some other reason cannot be opened for reading
-     * @throws IOException - if any IO error occurred
-     * @throws ClassCastException if this {@link Properties} object contains
-     * any keys or values that are not Strings
-     * @throws SecurityException if a security manager exists and its
-     * checkRead method denies read access to the file
-     */
-    public static void saveProperties() throws IOException {
-        String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
-        File propertiesFile = new File(path);
-        if (!propertiesFile.exists()) {
-            boolean success = propertiesFile.createNewFile();
-            if (!success) {
-                throw new IOException("Cannot create properties file: " + path);
-            }
-        }
-
-        try (FileOutputStream stream = new FileOutputStream(propertiesFile)) {
-            properties.store(stream, "SQLines Studio properties");
-        }
     }
 
     /**
@@ -153,6 +109,24 @@ public class PropertiesLoader {
         loadAppDir();
     }
 
+    /**
+     * Loads properties from the properties file.
+     *
+     * @throws FileNotFoundException if the file does not exist, is a directory rather
+     * than a regular file, or for some other reason cannot be opened for reading.
+     * @throws IOException - if any IO error occurred
+     * @throws SecurityException if a security manager exists and its
+     * checkRead method denies read access to the file
+     */
+    public static void loadProperties() throws IOException {
+        String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
+        File propertiesFile = new File(path);
+        try (FileInputStream stream = new FileInputStream(propertiesFile)) {
+            properties.load(stream);
+            loadAppDir();
+        }
+    }
+
     private static void loadAppDir() {
         try {
             String appPath = PropertiesLoader.class
@@ -165,6 +139,32 @@ public class PropertiesLoader {
             properties.setProperty("model.app-dir", appPath);
         } catch (Exception e) {
             logger.error("Loading application dir: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Saves application properties to the properties file.
+     *
+     * @throws FileNotFoundException if the file does not exist, is a directory rather
+     * than a regular file, or for some other reason cannot be opened for reading
+     * @throws IOException - if any IO error occurred
+     * @throws ClassCastException if this {@link Properties} object contains
+     * any keys or values that are not Strings
+     * @throws SecurityException if a security manager exists and its
+     * checkRead method denies read access to the file
+     */
+    public static void saveProperties() throws IOException {
+        String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
+        File propertiesFile = new File(path);
+        if (!propertiesFile.exists()) {
+            boolean success = propertiesFile.createNewFile();
+            if (!success) {
+                throw new IOException("Cannot create properties file: " + path);
+            }
+        }
+
+        try (FileOutputStream stream = new FileOutputStream(propertiesFile)) {
+            properties.store(stream, "SQLines Studio properties");
         }
     }
 }

@@ -20,8 +20,6 @@ import com.sqlines.studio.view.ErrorWindow;
 import com.sqlines.studio.view.Window;
 import com.sqlines.studio.view.settings.event.ChangeLicenseEvent;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -43,10 +41,14 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * The concrete setting window.
  */
 public class SettingsWindow extends Window implements SettingsWindowView {
+    private EventHandler<ChangeLicenseEvent> licenseEventHandler;
+
     // General settings
     private final ChoiceBox<String> dirsBox = new ChoiceBox<>();
     private final Button addDirButton = new Button();
@@ -67,8 +69,6 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     private final TextField regNumberField = new TextField();
     private final Button changeButton = new Button();
 
-    private EventHandler<ChangeLicenseEvent> licenseEventHandler;
-
     public SettingsWindow() {
         TabPane tabPane = new TabPane();
         setRoot(tabPane);
@@ -83,6 +83,88 @@ public class SettingsWindow extends Window implements SettingsWindowView {
         setWidth(320);
         setHeight(210);
         setResizable(false);
+    }
+
+    private void tabIndexChanged(@NotNull ObservableValue<? extends Number> observable,
+                                 @NotNull Number oldIndex,
+                                 @NotNull Number newIndex) {
+        int tabIndex = newIndex.intValue();
+        if (tabIndex == 0) { // General settings tab
+            setWidth(320);
+            setHeight(210);
+        } else if (tabIndex == 1) { // Editor settings tab
+            setWidth(320);
+            setHeight(240);
+        } else if (tabIndex == 2) { // License settings tab
+            setWidth(320);
+            setHeight(220);
+        }
+    }
+
+    private @NotNull VBox makeGeneralTab() {
+        addDirButton.setText("Add new");
+        saveSessionButton.setText("Save last session");
+        setDefaultsButton.setText("Set defaults");
+
+        GridPane topLayout = new GridPane();
+        topLayout.setHgap(10);
+        topLayout.setVgap(10);
+        topLayout.add(new Text("Working directory:"), 0, 0);
+        topLayout.add(dirsBox, 1, 0);
+        topLayout.add(addDirButton, 1, 1);
+
+        VBox mainLayout = new VBox(topLayout, saveSessionButton, setDefaultsButton);
+        mainLayout.setPadding(new Insets(10, 15, 10, 15));
+        mainLayout.setSpacing(10);
+
+        return mainLayout;
+    }
+
+    private @NotNull VBox makeAppearanceTab() {
+        statusBarButton.setText("Status bar");
+        targetFieldButton.setText("Always show target field");
+        wrappingButton.setText("Wrap lines to editor width");
+        highlighterButton.setText("Highlighter");
+        lineNumbersButton.setText("Line numbers");
+
+        GridPane topLayout = new GridPane();
+        topLayout.setVgap(10);
+        topLayout.setHgap(10);
+        topLayout.add(new Text("Theme:"), 0, 0);
+        topLayout.add(themesBox, 1, 0);
+
+        VBox mainLayout = new VBox(topLayout, statusBarButton, targetFieldButton,
+                wrappingButton, highlighterButton, lineNumbersButton);
+        mainLayout.setPadding(new Insets(10, 15, 10, 15));
+        mainLayout.setSpacing(10);
+
+        return mainLayout;
+    }
+
+    private @NotNull VBox makeLicenseTab() {
+        regNameField.setPromptText("Enter registration name");
+        regNumberField.setPromptText("Enter registration number");
+
+        changeButton.setText("Commit change");
+        changeButton.setOnAction(event -> {
+            ChangeLicenseEvent clickedEvent = new ChangeLicenseEvent(
+                    regNameField.getText(), regNumberField.getText()
+            );
+            changeButton.fireEvent(clickedEvent);
+            if (licenseEventHandler != null) {
+                licenseEventHandler.handle(clickedEvent);
+            }
+        });
+
+        VBox topLayout = new VBox(licenseInfo);
+        topLayout.setPadding(new Insets(10, 0, 5, 0));
+
+        VBox mainLayout = new VBox(topLayout, regNameField,
+                regNumberField, changeButton);
+        mainLayout.setPadding(new Insets(10, 15, 10, 15));
+        mainLayout.setSpacing(10);
+
+        return mainLayout;
     }
 
     @Override
@@ -246,87 +328,5 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     @Override
     public void setOnChangeLicenseAction(@NotNull EventHandler<ChangeLicenseEvent> action) {
         licenseEventHandler = action;
-    }
-
-    private @NotNull VBox makeGeneralTab() {
-        addDirButton.setText("Add new");
-        saveSessionButton.setText("Save last session");
-        setDefaultsButton.setText("Set defaults");
-
-        GridPane topLayout = new GridPane();
-        topLayout.setHgap(10);
-        topLayout.setVgap(10);
-        topLayout.add(new Text("Working directory:"), 0, 0);
-        topLayout.add(dirsBox, 1, 0);
-        topLayout.add(addDirButton, 1, 1);
-
-        VBox mainLayout = new VBox(topLayout, saveSessionButton, setDefaultsButton);
-        mainLayout.setPadding(new Insets(10, 15, 10, 15));
-        mainLayout.setSpacing(10);
-
-        return mainLayout;
-    }
-
-    private @NotNull VBox makeAppearanceTab() {
-        statusBarButton.setText("Status bar");
-        targetFieldButton.setText("Always show target field");
-        wrappingButton.setText("Wrap lines to editor width");
-        highlighterButton.setText("Highlighter");
-        lineNumbersButton.setText("Line numbers");
-
-        GridPane topLayout = new GridPane();
-        topLayout.setVgap(10);
-        topLayout.setHgap(10);
-        topLayout.add(new Text("Theme:"), 0, 0);
-        topLayout.add(themesBox, 1, 0);
-
-        VBox mainLayout = new VBox(topLayout, statusBarButton, targetFieldButton,
-                wrappingButton, highlighterButton, lineNumbersButton);
-        mainLayout.setPadding(new Insets(10, 15, 10, 15));
-        mainLayout.setSpacing(10);
-
-        return mainLayout;
-    }
-
-    private @NotNull VBox makeLicenseTab() {
-        regNameField.setPromptText("Enter registration name");
-        regNumberField.setPromptText("Enter registration number");
-
-        changeButton.setText("Commit change");
-        changeButton.setOnAction(event -> {
-            ChangeLicenseEvent clickedEvent = new ChangeLicenseEvent(
-                    regNameField.getText(), regNumberField.getText()
-            );
-            changeButton.fireEvent(clickedEvent);
-            if (licenseEventHandler != null) {
-                licenseEventHandler.handle(clickedEvent);
-            }
-        });
-
-        VBox topLayout = new VBox(licenseInfo);
-        topLayout.setPadding(new Insets(10, 0, 5, 0));
-
-        VBox mainLayout = new VBox(topLayout, regNameField,
-                regNumberField, changeButton);
-        mainLayout.setPadding(new Insets(10, 15, 10, 15));
-        mainLayout.setSpacing(10);
-
-        return mainLayout;
-    }
-
-    private void tabIndexChanged(@NotNull ObservableValue<? extends Number> observable,
-                                 @NotNull Number oldIndex,
-                                 @NotNull Number newIndex) {
-        int tabIndex = newIndex.intValue();
-        if (tabIndex == 0) { // General settings tab
-            setWidth(320);
-            setHeight(210);
-        } else if (tabIndex == 1) { // Editor settings tab
-            setWidth(320);
-            setHeight(240);
-        } else if (tabIndex == 2) { // License settings tab
-            setWidth(320);
-            setHeight(220);
-        }
     }
 }

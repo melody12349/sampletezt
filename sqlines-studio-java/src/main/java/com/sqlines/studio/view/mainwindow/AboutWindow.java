@@ -18,8 +18,6 @@ package com.sqlines.studio.view.mainwindow;
 
 import com.sqlines.studio.view.Window;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
@@ -31,13 +29,15 @@ import javafx.stage.StageStyle;
 
 import java.net.URL;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Provides a window with information about the application.
  */
 class AboutWindow extends Window {
 
     /**
-     * Creates a new {@link AboutWindow}.
+     * Constructs a new AboutWindow.
      *
      * @throws IllegalStateException if SQLines Studio logo icon was not found in application resources
      */

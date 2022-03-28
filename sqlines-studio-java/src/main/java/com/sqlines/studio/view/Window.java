@@ -16,12 +16,12 @@
 
 package com.sqlines.studio.view;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The base class of all UI windows.

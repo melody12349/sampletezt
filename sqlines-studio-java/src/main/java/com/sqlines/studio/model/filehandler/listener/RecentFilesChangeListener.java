@@ -48,7 +48,7 @@ public interface RecentFilesChangeListener {
         private int movedTo;
 
         /**
-         * Creates a new {@link Change} with the specified change type,
+         * Constructs a new Change with the specified change type,
          * recent file path and the file index where the change occurred.
          *
          * @param changeType a type of change that occurred in the list of recent files
@@ -74,7 +74,7 @@ public interface RecentFilesChangeListener {
         }
 
         /**
-         * Creates a new {@link Change} with the specified change type, recent file path,
+         * Constructs a new Change with the specified change type, recent file path,
          * initial file index and new file index.
          *
          * @param changeType a type of change that occurred in the list of recent files
@@ -86,8 +86,7 @@ public interface RecentFilesChangeListener {
          *
          * @apiNote Suitable for the {@link ChangeType#FILE_MOVED} change type.
          */
-        public Change(@NotNull ChangeType changeType,
-                      @NotNull String path,
+        public Change(@NotNull ChangeType changeType, @NotNull String path,
                       int movedFrom, int movedTo) {
             if (changeType != ChangeType.FILE_MOVED) {
                 String errorMsg = "Invalid change type: FILE_MOVED expected, " +

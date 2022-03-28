@@ -23,16 +23,18 @@ import com.sqlines.studio.view.mainwindow.MainWindowSettingsView;
 import com.sqlines.studio.view.settings.event.ChangeLicenseEvent;
 import com.sqlines.studio.view.settings.SettingsWindowView;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Responds to user actions in the settings window.
@@ -48,7 +50,7 @@ public class SettingsPresenter {
     private final List<? extends Window> windows;
 
     /**
-     * Creates a new {@link SettingsPresenter}.
+     * Constructs a new  SettingsPresenter.
      *
      * @param license license
      * @param settingsWindowView settings window
@@ -64,10 +66,16 @@ public class SettingsPresenter {
         this.mainWindow = mainWindowView;
         this.windows = windows;
 
-        license.addLicenseListener(this::licenseChanged);
-
         settingsWindow.setThemes(List.of("Light", "Dark"));
         settingsWindow.setWorkingDirectories(List.of("Home"));
+
+        initHandlers();
+        loadProperties();
+        checkLicense();
+    }
+
+    private void initHandlers() {
+        license.addLicenseListener(this::licenseChanged);
 
         mainWindow.setOnPreferencesAction(event -> showSettingsWindow());
         mainWindow.setOnTabCloseAction(event -> windows.forEach(Window::close));
@@ -98,25 +106,6 @@ public class SettingsPresenter {
         EventHandler<ActionEvent> changeLineNumbersPolicy = event -> changeLineNumbersPolicyPressed();
         mainWindow.setOnLineNumbersAction(changeLineNumbersPolicy);
         settingsWindow.setOnLineNumbersAction(changeLineNumbersPolicy);
-
-        loadProperties();
-        checkLicense();
-    }
-
-    private void checkLicense() {
-        try {
-            if (license.isActive()) {
-                mainWindow.setWindowTitle("SQLines Studio");
-                settingsWindow.setLicenseInfo("License: Active");
-            } else {
-                mainWindow.setWindowTitle("SQLINES STUDIO - FOR EVALUATION USE ONLY");
-                settingsWindow.setLicenseInfo("License: For evaluation use only");
-            }
-        } catch (Exception e) {
-            mainWindow.setWindowTitle("SQLINES STUDIO - FOR EVALUATION USE ONLY");
-            settingsWindow.setLicenseInfo("License: For evaluation use only");
-            logger.error("License check: " + e.getMessage());
-        }
     }
 
     private void loadProperties() {
@@ -252,6 +241,22 @@ public class SettingsPresenter {
         }
     }
 
+    private void checkLicense() {
+        try {
+            if (license.isActive()) {
+                mainWindow.setWindowTitle("SQLines Studio");
+                settingsWindow.setLicenseInfo("License: Active");
+            } else {
+                mainWindow.setWindowTitle("SQLINES STUDIO - FOR EVALUATION USE ONLY");
+                settingsWindow.setLicenseInfo("License: For evaluation use only");
+            }
+        } catch (Exception e) {
+            mainWindow.setWindowTitle("SQLINES STUDIO - FOR EVALUATION USE ONLY");
+            settingsWindow.setLicenseInfo("License: For evaluation use only");
+            logger.error("License check: " + e.getMessage());
+        }
+    }
+
     private void showSettingsWindow() {
         if (!settingsWindow.isShowing()) {
             settingsWindow.show();
@@ -342,7 +347,6 @@ public class SettingsPresenter {
             } else if (policy.equals("disabled")) {
                 properties.setProperty("model.save-session", "enabled");
             }
-
 
             PropertiesLoader.saveProperties();
         } catch (Exception e) {

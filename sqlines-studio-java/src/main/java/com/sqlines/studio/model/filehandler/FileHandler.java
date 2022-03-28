@@ -20,16 +20,25 @@ import com.sqlines.studio.model.tabsdata.ObservableTabsData;
 import com.sqlines.studio.model.tabsdata.listener.TabsChangeListener;
 import com.sqlines.studio.model.filehandler.listener.RecentFilesChangeListener;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Updates the tab data if the data in the opened files have been changed.
@@ -64,9 +73,85 @@ public class FileHandler implements Runnable, Serializable {
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
-                logger.error("run() - " + e.getMessage());
+                logger.error("File verification: " + e.getMessage());
                 break;
             }
+        }
+    }
+
+    private synchronized void monitorFileChanged() {
+        for (int i = 0; i < sourceFilesLastModified.size(); i++) {
+            String filePath = tabsData.getSourceFilePath(i);
+            File file = new File(filePath);
+            long lastModified = sourceFilesLastModified.get(i);
+
+            if (!filePath.isEmpty() && !file.exists() // If the file was deleted
+                    || file.lastModified() != lastModified) { // Or the file was modified
+                updateSourceFile(i);
+            }
+        }
+
+        for (int i = 0; i < targetFilesLastModified.size(); i++) {
+            String filePath = tabsData.getTargetFilePath(i);
+            File file = new File(filePath);
+            long lastModified = targetFilesLastModified.get(i);
+
+            if (!filePath.isEmpty() && !file.exists() // If the file was deleted
+                    || file.lastModified() != lastModified) { // Or the file was modified
+                updateTargetFile(i);
+            }
+        }
+    }
+
+    private void updateSourceFile(int index) {
+        String filePath = tabsData.getSourceFilePath(index);
+        File file = new File(filePath);
+
+        // If the file was deleted
+        if (!file.exists() && !filePath.isEmpty()) {
+            tabsData.setSourceFilePath("", index);
+            sourceFilesLastModified.set(index, 0L);
+            return;
+        }
+
+        if (!file.exists()) {
+            sourceFilesLastModified.set(index, 0L);
+            return;
+        }
+
+        // If the file was modified
+        try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
+            String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            tabsData.setSourceText(text, index);
+            sourceFilesLastModified.set(index, file.lastModified());
+        } catch (Exception e) {
+            logger.error("Updating source file: " + e.getMessage());
+        }
+    }
+
+    private void updateTargetFile(int index) {
+        String filePath = tabsData.getTargetFilePath(index);
+        File file = new File(filePath);
+
+        // If the file was deleted
+        if (!file.exists() && !filePath.isEmpty()) {
+            tabsData.setTargetFilePath("", index);
+            targetFilesLastModified.set(index, 0L);
+            return;
+        }
+
+        if (!file.exists()) {
+            targetFilesLastModified.set(index, 0L);
+            return;
+        }
+
+        // If the file was modified
+        try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
+            String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            tabsData.setTargetText(text, index);
+            targetFilesLastModified.set(index, file.lastModified());
+        } catch (Exception e) {
+            logger.error("Updating target file: " + e.getMessage());
         }
     }
 
@@ -80,25 +165,53 @@ public class FileHandler implements Runnable, Serializable {
         tabsData.addTabsListener(this::tabsDataChanged);
     }
 
+    private synchronized void tabsDataChanged(@NotNull TabsChangeListener.Change change) {
+        if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_ADDED) {
+            int tabIndex = change.getTabIndex();
+            addSourceFile(tabsData.getSourceFilePath(tabIndex), tabIndex);
+            addTargetFile(tabsData.getTargetFilePath(tabIndex), tabIndex);
+        } else if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_REMOVED) {
+            int tabIndex = change.getTabIndex();
+            removeSourceFile(tabIndex);
+            removeTargetFile(tabIndex);
+        }
+    }
+
+    private void addSourceFile(@NotNull String filePath, int index) {
+        File file = new File(filePath);
+        sourceFilesLastModified.add(index, file.lastModified());
+    }
+
+    private void addTargetFile(@NotNull String filePath, int index) {
+        File file = new File(filePath);
+        targetFilesLastModified.add(index, file.lastModified());
+    }
+
+    private void removeSourceFile(int index) {
+        sourceFilesLastModified.remove(index);
+    }
+
+    private void removeTargetFile(int index) {
+        targetFilesLastModified.remove(index);
+    }
+
     /**
      * Opens files and updates tabs data.
-     * Adds all the files to the the recent files list. If a file is already is the list,
-     * moves it to the top of the list.
+     * Adds all the files to the recent files list. If a file is already
+     * in the recent files list, moves it to the top of the list.
      * <p>
      * Notifies all {@link RecentFilesChangeListener} listeners of the occurred change.
      *
      * @param files files to open
      *
-     * @throws FileNotFoundException if the file does not exist,
-     * is a directory rather than a regular file, or for some other
-     * reason cannot be opened for reading.
+     * @throws FileNotFoundException if the file does not exist, is a directory rather than
+     * a regular file, or for some other reason cannot be opened for reading.
      * @throws IOException if any IO error occurred
      * @throws SecurityException if a security manager exists and its checkRead
      * method denies read access to the file.
      */
     public synchronized void openSourceFiles(@NotNull List<File> files) throws IOException {
-        files.removeIf(file -> file.isDirectory() || file.canExecute());
-
+        files.removeIf(File::isDirectory);
         for (File file : files) {
             int currIndex = tabsData.getCurrTabIndex();
             if (!tabsData.getSourceText(currIndex).isEmpty()) {
@@ -114,27 +227,31 @@ public class FileHandler implements Runnable, Serializable {
                 tabsData.setTabTitle(file.getName(), currIndex);
                 sourceFilesLastModified.set(currIndex, file.lastModified());
 
-                if (!recentFiles.contains(file)) {
-                    recentFiles.add(file);
-
-                    String path = file.getAbsolutePath();
-                    int index = recentFiles.indexOf(file);
-                    RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
-                            RecentFilesChangeListener.Change.ChangeType.FILE_ADDED, path, index
-                    );
-                    recentFilesListeners.forEach(listener -> listener.onChange(change));
-                } else {
-                    int from = recentFiles.indexOf(file);
-                    recentFiles.remove(file);
-                    recentFiles.add(0, file);
-
-                    String path = file.getAbsolutePath();
-                    RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
-                            RecentFilesChangeListener.Change.ChangeType.FILE_MOVED, path, from, 0
-                    );
-                    recentFilesListeners.forEach(listener -> listener.onChange(change));
-                }
+                changeRecentFiles(file);
             }
+        }
+    }
+
+    private void changeRecentFiles(@NotNull File file) {
+        if (!recentFiles.contains(file)) {
+            recentFiles.add(file);
+
+            RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
+                    RecentFilesChangeListener.Change.ChangeType.FILE_ADDED,
+                    file.getAbsolutePath(), recentFiles.indexOf(file)
+            );
+
+            recentFilesListeners.forEach(listener -> listener.onChange(change));
+        } else {
+            int from = recentFiles.indexOf(file);
+            recentFiles.remove(file);
+            recentFiles.add(0, file);
+
+            RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
+                    RecentFilesChangeListener.Change.ChangeType.FILE_MOVED,
+                    file.getAbsolutePath(), from, 0
+            );
+            recentFilesListeners.forEach(listener -> listener.onChange(change));
         }
     }
 
@@ -310,112 +427,6 @@ public class FileHandler implements Runnable, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(sourceFilesLastModified, targetFilesLastModified, recentFiles);
-    }
-
-    private synchronized void tabsDataChanged(@NotNull TabsChangeListener.Change change) {
-        if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_ADDED) {
-            int tabIndex = change.getTabIndex();
-            addSourceFile(tabsData.getSourceFilePath(tabIndex), tabIndex);
-            addTargetFile(tabsData.getTargetFilePath(tabIndex), tabIndex);
-        } else if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_REMOVED) {
-            int tabIndex = change.getTabIndex();
-            removeSourceFile(tabIndex);
-            removeTargetFile(tabIndex);
-        }
-    }
-
-    private void addSourceFile(@NotNull String filePath, int index) {
-        File file = new File(filePath);
-        sourceFilesLastModified.add(index, file.lastModified());
-    }
-
-    private void addTargetFile(@NotNull String filePath, int index) {
-        File file = new File(filePath);
-        targetFilesLastModified.add(index, file.lastModified());
-    }
-
-    private void removeSourceFile(int index) {
-        sourceFilesLastModified.remove(index);
-    }
-
-    private void removeTargetFile(int index) {
-        targetFilesLastModified.remove(index);
-    }
-
-    private synchronized void monitorFileChanged() {
-        for (int i = 0; i < sourceFilesLastModified.size(); i++) {
-            String filePath = tabsData.getSourceFilePath(i);
-            File file = new File(filePath);
-            long lastModified = sourceFilesLastModified.get(i);
-
-            if (!filePath.isEmpty() && !file.exists() // If the file was deleted
-                    || file.lastModified() != lastModified) { // Or the file was modified
-               updateSourceFile(i);
-           }
-        }
-
-        for (int i = 0; i < targetFilesLastModified.size(); i++) {
-            String filePath = tabsData.getTargetFilePath(i);
-            File file = new File(filePath);
-            long lastModified = targetFilesLastModified.get(i);
-
-            if (!filePath.isEmpty() && !file.exists() // If the file was deleted
-                    || file.lastModified() != lastModified) { // Or the file was modified
-                updateTargetFile(i);
-            }
-        }
-    }
-
-    private void updateSourceFile(int index) {
-        String filePath = tabsData.getSourceFilePath(index);
-        File file = new File(filePath);
-
-        // If the file was deleted
-        if (!file.exists() && !filePath.isEmpty()) {
-            tabsData.setSourceFilePath("", index);
-            sourceFilesLastModified.set(index, 0L);
-            return;
-        }
-
-        if (!file.exists()) {
-            sourceFilesLastModified.set(index, 0L);
-            return;
-        }
-
-        // If the file was modified
-        try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
-            String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            tabsData.setSourceText(text, index);
-            sourceFilesLastModified.set(index, file.lastModified());
-        } catch (Exception e) {
-            logger.error("Updating source file: " + e.getMessage());
-        }
-    }
-
-    private void updateTargetFile(int index) {
-        String filePath = tabsData.getTargetFilePath(index);
-        File file = new File(filePath);
-
-        // If the file was deleted
-        if (!file.exists() && !filePath.isEmpty()) {
-            tabsData.setTargetFilePath("", index);
-            targetFilesLastModified.set(index, 0L);
-            return;
-        }
-
-        if (!file.exists()) {
-            targetFilesLastModified.set(index, 0L);
-            return;
-        }
-
-        // If the file was modified
-        try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
-            String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            tabsData.setTargetText(text, index);
-            targetFilesLastModified.set(index, file.lastModified());
-        } catch (Exception e) {
-            logger.error("Updating target file: " + e.getMessage());
-        }
     }
 
     private synchronized void readObject(@NotNull ObjectInputStream stream)

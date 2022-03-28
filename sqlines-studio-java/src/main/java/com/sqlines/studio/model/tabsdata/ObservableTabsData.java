@@ -23,8 +23,6 @@ import com.sqlines.studio.model.tabsdata.listener.TextChangeListener;
 import com.sqlines.studio.model.tabsdata.listener.ModeChangeListener;
 import com.sqlines.studio.model.tabsdata.listener.FilePathChangeListener;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
@@ -33,6 +31,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Contains a synchronized observable list with the data of opened tabs.
@@ -118,6 +118,15 @@ public class ObservableTabsData implements Serializable {
                 TabsChangeListener.Change.ChangeType.TAB_ADDED, tabIndex
         );
         tabsListeners.forEach(listener -> listener.onChange(added));
+    }
+
+    private void checkRange(int tabIndex, int from, int to) {
+        if (tabIndex < from || tabIndex >= to) {
+            int endInd = (tabsData.size() == 0) ? 0 : tabsData.size() - 1;
+            String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, "
+                    + tabIndex + " provided";
+            throw new IndexOutOfBoundsException(errorMsg);
+        }
     }
 
     /**
@@ -606,15 +615,6 @@ public class ObservableTabsData implements Serializable {
     @Override
     public synchronized int hashCode() {
         return Objects.hash(tabsData, currTabIndex);
-    }
-
-    private void checkRange(int tabIndex, int from, int to) {
-        if (tabIndex < from || tabIndex >= to) {
-            int endInd = (tabsData.size() == 0) ? 0 : tabsData.size() - 1;
-            String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, "
-                    + tabIndex + " provided";
-            throw new IndexOutOfBoundsException(errorMsg);
-        }
     }
     
     private synchronized void readObject(@NotNull ObjectInputStream stream)

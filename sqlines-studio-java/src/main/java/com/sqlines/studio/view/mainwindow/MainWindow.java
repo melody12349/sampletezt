@@ -26,8 +26,6 @@ import com.sqlines.studio.view.mainwindow.listener.TabTitleChangeListener;
 import com.sqlines.studio.view.mainwindow.listener.TextChangeListener;
 import com.sqlines.studio.view.ErrorWindow;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -49,13 +47,15 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * The concrete main window.
  */
 public class MainWindow extends Window implements MainWindowView, MainWindowSettingsView {
     private final BorderPane layout = new BorderPane();
-    private final MenuBar menuBar = new MenuBar();
-    private final ToolBar toolBar = new ToolBar();
+    private final MainMenuBar menuBar = new MainMenuBar();
+    private final MainToolBar toolBar = new MainToolBar();
     private final TabPane tabBar = new TabPane();
     private final StatusBar statusBar = new StatusBar();
 
@@ -76,6 +76,35 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
     private LineNumbersPolicy lineNumbersPolicy = LineNumbersPolicy.SHOW;
 
     public MainWindow() {
+        initHandlers();
+
+        tabBar.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+
+        menuBar.setCloseTabState(false);
+        menuBar.setNextTabState(false);
+        menuBar.setPrevTabState(false);
+        menuBar.setOpenRecentState(false);
+        menuBar.setUndoState(false);
+        menuBar.setRedoState(false);
+        menuBar.setStatusBarSelected(true);
+        menuBar.setTargetFieldSelected(false);
+        menuBar.setWrappingSelected(false);
+        menuBar.setHighlighterSelected(true);
+        menuBar.setLineNumbersSelected(true);
+
+        layout.setTop(new VBox(menuBar, toolBar));
+        layout.setCenter(tabBar);
+        layout.setBottom(statusBar);
+
+        setRoot(layout);
+        setTitle("SQLines Studio");
+        setMinWidth(660);
+        setMinHeight(300);
+        setWidth(770);
+        setHeight(650);
+    }
+
+    private void initHandlers() {
         menuBar.setOnCloseTabAction(this::fireCloseEvent);
         menuBar.setOnAboutAction(event -> showAbout());
         menuBar.setOnNextTabAction(event -> nextTab());
@@ -94,23 +123,9 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         tabBar.focusedProperty().addListener(this::focusChanged);
         tabBar.getSelectionModel().selectedIndexProperty().addListener(this::tabSelectionChanged);
 
-        toolBar.addSourceModeChangeListener(this::sourceModeChanged);
-        toolBar.addTargetModeChangeListener(this::targetModeChanged);
-        toolBar.addFocusChangeListener(this::focusChanged);
-
-        menuBar.setCloseTabState(false);
-        menuBar.setNextTabState(false);
-        menuBar.setPrevTabState(false);
-        menuBar.setOpenRecentState(false);
-        menuBar.setUndoState(false);
-        menuBar.setRedoState(false);
-        menuBar.setStatusBarSelected(true);
-        menuBar.setTargetFieldSelected(false);
-        menuBar.setWrappingSelected(false);
-        menuBar.setHighlighterSelected(true);
-        menuBar.setLineNumbersSelected(true);
-
-        tabBar.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+        toolBar.addSourceModeListener(this::sourceModeChanged);
+        toolBar.addTargetModeListener(this::targetModeChanged);
+        toolBar.addFocusListener(this::focusChanged);
 
         // Stop the tab key and the arrow keys from navigating through the controls
         tabBar.addEventFilter(KeyEvent.ANY, keyEvent -> {
@@ -123,21 +138,155 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
                 keyEvent.consume();
             }
         });
+    }
 
-        layout.setTop(new VBox(menuBar, toolBar));
-        layout.setCenter(tabBar);
-        layout.setBottom(statusBar);
+    private void fireCloseEvent(@NotNull ActionEvent event) {
+        int tabIndex = tabBar.getSelectionModel().getSelectedIndex();
+        TabCloseEvent closeEvent = new TabCloseEvent(tabIndex);
+        tabBar.fireEvent(closeEvent);
 
-        setRoot(layout);
-        setTitle("SQLines Studio");
-        setMinWidth(660);
-        setMinHeight(300);
-        setWidth(770);
-        setHeight(650);
+        if (tabCloseEventHandler != null) {
+            tabCloseEventHandler.handle(closeEvent);
+            event.consume();
+        }
+    }
+
+    private void showAbout() {
+        AboutWindow aboutWindow = new AboutWindow();
+        if (getTheme() == Theme.LIGHT) {
+            aboutWindow.setLightStylesheets(getLightStylesheets());
+            aboutWindow.setTheme(Theme.LIGHT);
+        } else if (getTheme() == Theme.DARK) {
+            aboutWindow.setDarkStylesheets(getDarkStylesheets());
+            aboutWindow.setTheme(Theme.DARK);
+        }
+
+        aboutWindow.show();
+    }
+
+    private void nextTab() {
+        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
+        if (currIndex != tabBar.getTabs().size() - 1) {
+            tabBar.getSelectionModel().select(currIndex + 1);
+        }
+    }
+
+    private void prevTab() {
+        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
+        if (currIndex != 0) {
+            tabBar.getSelectionModel().select(currIndex - 1);
+        }
+    }
+
+    private void undo() {
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        centralNode.undo();
+    }
+
+    private void redo() {
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        centralNode.redo();
+    }
+
+    private void selectAll() {
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        centralNode.selectAll();
+    }
+
+    private void cut() {
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        centralNode.cut();
+    }
+
+    private void copy() {
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        centralNode.copy();
+    }
+
+    private void paste() {
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        centralNode.paste();
+    }
+
+    private void zoomIn() {
+        for (Tab tab : tabBar.getTabs()) {
+            CentralNode centralNode = (CentralNode) tab.getContent();
+            centralNode.zoomIn();
+        }
+    }
+
+    private void zoomOut() {
+        for (Tab tab : tabBar.getTabs()) {
+            CentralNode centralNode = (CentralNode) tab.getContent();
+            centralNode.zoomOut();
+        }
+    }
+
+    private void handleDragEvent(@NotNull DragEvent event) {
+        if (dragEventHandler != null) {
+            dragEventHandler.handle(event);
+        }
+    }
+
+    private void handleDropEvent(@NotNull DragEvent event) {
+        if (dropEventHandler != null) {
+            dropEventHandler.handle(event);
+        }
+    }
+
+    private void focusChanged(@NotNull ObservableValue<? extends Boolean> observable,
+                              @NotNull Boolean oldFocus,
+                              @NotNull Boolean isFocusedNow) {
+        if (tabBar.getSelectionModel().getSelectedIndex() == -1) {
+            return;
+        }
+
+        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
+        CentralNode centralNode = (CentralNode) currTab.getContent();
+        if (inFocus == FieldInFocus.SOURCE) {
+            centralNode.focusOn(CentralNode.FieldInFocus.SOURCE);
+        } else if (inFocus == FieldInFocus.TARGET) {
+            centralNode.focusOn(CentralNode.FieldInFocus.TARGET);
+        }
+
+        menuBar.setUndoState(centralNode.isUndoAvailable());
+        menuBar.setRedoState(centralNode.isRedoAvailable());
+    }
+
+    private void tabSelectionChanged(@NotNull ObservableValue<? extends Number> observable,
+                                     @NotNull Number oldIndex,
+                                     @NotNull Number newIndex) {
+        int tabIndex = newIndex.intValue();
+        menuBar.setPrevTabState(tabIndex > 0);
+        menuBar.setNextTabState(tabIndex != tabBar.getTabs().size() - 1);
+
+        Tab tab = tabBar.getTabs().get(tabIndex);
+        CentralNode centralNode = (CentralNode) tab.getContent();
+        centralNode.focusOn(CentralNode.FieldInFocus.SOURCE);
+    }
+
+    private void sourceModeChanged(@NotNull ObservableValue<? extends String> observable,
+                                   String oldMode,
+                                   @NotNull String newMode) {
+        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
+        sourceModeListeners.forEach(listener -> listener.changed(newMode, currIndex));
+    }
+
+    private void targetModeChanged(@NotNull ObservableValue<? extends String> observable,
+                                   String oldMode,
+                                   @NotNull String newMode) {
+        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
+        targetModeListeners.forEach(listener -> listener.changed(newMode, currIndex));
     }
 
     /**
-     * Sets conversion modes displayed in the tool bar.
+     * Sets conversion modes displayed in the toolbar.
      *
      * @param sourceModes list of source modes to set
      * @param targetModes list of target modes to set
@@ -154,8 +303,16 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
     public @NotNull FieldInFocus getFieldInFocus(int tabIndex) {
         // Trows exception if tabIndex is out of valid range
         checkRange(tabIndex, 0, tabBar.getTabs().size());
-
         return inFocus;
+    }
+
+    private void checkRange(int tabIndex, int from, int to) {
+        if (tabIndex < from || tabIndex >= to) {
+            int endInd = (tabBar.getTabs().size() == 0) ? 0 : tabBar.getTabs().size() - 1;
+            String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, " +
+                    tabIndex + " provided";
+            throw new IndexOutOfBoundsException(errorMsg);
+        }
     }
 
     @Override
@@ -227,16 +384,16 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         targetFieldPolicy = policy;
 
         if (policy == TargetFieldPolicy.ALWAYS) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setTargetFieldPolicy(CentralNode.TargetFieldPolicy.ALWAYS);
-            }
+            });
             menuBar.setTargetFieldSelected(true);
         } else if (policy == TargetFieldPolicy.AS_NEEDED) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setTargetFieldPolicy(CentralNode.TargetFieldPolicy.AS_NEEDED);
-            }
+            });
             menuBar.setTargetFieldSelected(false);
         }
     }
@@ -246,16 +403,16 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         wrappingPolicy = policy;
 
         if (policy == WrappingPolicy.WRAP_LINES) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setWrappingPolicy(CodeEditor.WrappingPolicy.WRAP_LINES);
-            }
+            });
             menuBar.setWrappingSelected(true);
         } else if (policy == WrappingPolicy.NO_WRAP) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setWrappingPolicy(CodeEditor.WrappingPolicy.NO_WRAP);
-            }
+            });
             menuBar.setWrappingSelected(false);
         }
     }
@@ -265,16 +422,16 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         highlighterPolicy = policy;
 
         if (policy == HighlighterPolicy.HIGHLIGHT) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setHighlighterPolicy(CodeEditor.HighlighterPolicy.HIGHLIGHT);
-            }
+            });
             menuBar.setHighlighterSelected(true);
         } else if (policy == HighlighterPolicy.DO_NOT_HIGHLIGHT) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setHighlighterPolicy(CodeEditor.HighlighterPolicy.DO_NOT_HIGHLIGHT);
-            }
+            });
             menuBar.setHighlighterSelected(false);
         }
     }
@@ -284,17 +441,17 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         lineNumbersPolicy = policy;
 
         if (policy == LineNumbersPolicy.SHOW) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setLineNumbersPolicy(CodeEditor.LineNumbersPolicy.SHOW);
-            }
+            });
             statusBar.showLineColumnNumberArea(true);
             menuBar.setLineNumbersSelected(true);
         } else if (policy == LineNumbersPolicy.DO_NOT_SHOW) {
-            for (Tab tab : tabBar.getTabs()) {
+            tabBar.getTabs().forEach(tab -> {
                 CentralNode centralNode = (CentralNode) tab.getContent();
                 centralNode.setLineNumbersPolicy(CodeEditor.LineNumbersPolicy.DO_NOT_SHOW);
-            }
+            });
             statusBar.showLineColumnNumberArea(false);
             menuBar.setLineNumbersSelected(false);
         }
@@ -320,8 +477,8 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
 
         CentralNode centralNode = new CentralNode();
         setUpCentralNode(newTab, centralNode);
-
         newTab.setContent(centralNode);
+        
         tabBar.getTabs().add(tabIndex, newTab);
         tabBar.getSelectionModel().select(tabIndex);
 
@@ -335,6 +492,121 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
         int tabsNumber = tabBar.getTabs().size();
         menuBar.setCloseTabState(tabsNumber != 1);
         tabBar.getTabs().forEach(tab -> tab.setClosable(tabsNumber != 1));
+    }
+
+    private void setTabTitle(@NotNull Tab tab, int tabIndex) {
+        List<Integer> tabNumbers = new LinkedList<>();
+        tabBar.getTabs().forEach(item -> {
+            StringBuilder tabTitle = new StringBuilder(item.getText());
+            tabTitle.delete(0, 4); // Delete "Tab "
+            try {
+                int tabNumber = Integer.parseInt(tabTitle.toString());
+                tabNumbers.add(tabNumber);  // The tab has a standard title "Tab i"
+            } catch (NumberFormatException ignored) {
+                // The tab had a custom title. Skip
+            }
+        });
+
+        Collections.sort(tabNumbers);
+        int i = 0;
+        for (; i < tabNumbers.size(); i++) {
+            if (tabNumbers.get(i) != i + 1) {
+                break;
+            }
+        }
+
+        String title = "Tab " + (i + 1);
+        tab.setText(title);
+        tabTitleListeners.forEach(listener -> listener.changed(title, tabIndex));
+    }
+
+    private void setUpCentralNode(@NotNull Tab tab, @NotNull CentralNode centralNode) {
+        if (targetFieldPolicy == TargetFieldPolicy.ALWAYS) {
+            centralNode.setTargetFieldPolicy(CentralNode.TargetFieldPolicy.ALWAYS);
+        } else if (targetFieldPolicy == TargetFieldPolicy.AS_NEEDED) {
+            centralNode.setTargetFieldPolicy(CentralNode.TargetFieldPolicy.AS_NEEDED);
+        }
+
+        if (wrappingPolicy == WrappingPolicy.WRAP_LINES) {
+            centralNode.setWrappingPolicy(CodeEditor.WrappingPolicy.WRAP_LINES);
+        } else if (wrappingPolicy == WrappingPolicy.NO_WRAP) {
+            centralNode.setWrappingPolicy(CodeEditor.WrappingPolicy.NO_WRAP);
+        }
+
+        if (highlighterPolicy == HighlighterPolicy.HIGHLIGHT) {
+            centralNode.setHighlighterPolicy(CodeEditor.HighlighterPolicy.HIGHLIGHT);
+        } else if (highlighterPolicy == HighlighterPolicy.DO_NOT_HIGHLIGHT) {
+            centralNode.setHighlighterPolicy(CodeEditor.HighlighterPolicy.DO_NOT_HIGHLIGHT);
+        }
+
+        if (lineNumbersPolicy == LineNumbersPolicy.SHOW) {
+            centralNode.setLineNumbersPolicy(CodeEditor.LineNumbersPolicy.SHOW);
+        } else if (lineNumbersPolicy == LineNumbersPolicy.DO_NOT_SHOW) {
+            centralNode.setLineNumbersPolicy(CodeEditor.LineNumbersPolicy.DO_NOT_SHOW);
+        }
+
+        centralNode.addSourceTextListener((observable, oldText, newText) -> {
+            menuBar.setUndoState(centralNode.isUndoAvailable());
+            menuBar.setRedoState(centralNode.isRedoAvailable());
+
+            int tabIndex = tabBar.getTabs().indexOf(tab);
+            sourceTextListeners.forEach(listener -> listener.changed(newText, tabIndex));
+        });
+
+        centralNode.addTargetTextListener((observable, oldText, newText) -> {
+            menuBar.setUndoState(centralNode.isUndoAvailable());
+            menuBar.setRedoState(centralNode.isRedoAvailable());
+
+            int tabIndex = tabBar.getTabs().indexOf(tab);
+            targetTextListeners.forEach(listener -> listener.changed(newText, tabIndex));
+        });
+
+        centralNode.addSourceLineListener((observable, oldLineIndex, newLineIndex) ->
+                statusBar.setLineNumber(newLineIndex + 1));
+
+        centralNode.addSourceColumnListener((observable, oldColumnIndex, newColumnIndex) ->
+                statusBar.setColumnNumber(newColumnIndex + 1));
+
+        centralNode.addTargetLineListener((observable, oldLineIndex, newLineIndex) ->
+                statusBar.setLineNumber(newLineIndex + 1));
+
+        centralNode.addTargetColumnListener((observable, oldColumnIndex, newColumnIndex) ->
+                statusBar.setColumnNumber(newColumnIndex + 1));
+
+        Runnable focusChanged = () -> {
+            int lineNumber = 0;
+            int columnNumber = 0;
+            if (inFocus == FieldInFocus.SOURCE) {
+                lineNumber = centralNode.getSourceLineIndex();
+                columnNumber = centralNode.getSourceColumnIndex();
+            } else if (inFocus == FieldInFocus.TARGET) {
+                lineNumber = centralNode.getTargetLineIndex();
+                columnNumber = centralNode.getTargetColumnIndex();
+            }
+
+            statusBar.setLineNumber(lineNumber + 1);
+            statusBar.setColumnNumber(columnNumber + 1);
+
+            menuBar.setUndoState(centralNode.isUndoAvailable());
+            menuBar.setRedoState(centralNode.isRedoAvailable());
+
+            int tabIndex = tabBar.getSelectionModel().getSelectedIndex();
+            focusListeners.forEach(listener -> listener.changed(inFocus, tabIndex));
+        };
+
+        centralNode.addSourceFocusListener((observable, oldFocus, isFocused) -> {
+            if (isFocused) {
+                inFocus = FieldInFocus.SOURCE;
+                focusChanged.run();
+            }
+        });
+
+        centralNode.addTargetFocusListener((observable, oldFocus, isFocused) -> {
+            if (isFocused) {
+                inFocus = FieldInFocus.TARGET;
+                focusChanged.run();
+            }
+        });
     }
 
     @Override
@@ -600,274 +872,5 @@ public class MainWindow extends Window implements MainWindowView, MainWindowSett
     @Override
     public void setOnLineNumbersAction(@NotNull EventHandler<ActionEvent> action) {
         menuBar.setOnLineNumbersAction(action);
-    }
-
-    private void checkRange(int tabIndex, int from, int to) {
-        if (tabIndex < from || tabIndex >= to) {
-            int endInd = (tabBar.getTabs().size() == 0) ? 0 : tabBar.getTabs().size() - 1;
-            String errorMsg = "Invalid index: " + "(0:" + endInd + ") expected, " +
-                    tabIndex + " provided";
-            throw new IndexOutOfBoundsException(errorMsg);
-        }
-    }
-
-    private void fireCloseEvent(@NotNull ActionEvent event) {
-        int tabIndex = tabBar.getSelectionModel().getSelectedIndex();
-        TabCloseEvent closeEvent = new TabCloseEvent(tabIndex);
-        tabBar.fireEvent(closeEvent);
-
-        if (tabCloseEventHandler != null) {
-            tabCloseEventHandler.handle(closeEvent);
-            event.consume();
-        }
-    }
-
-    private void showAbout() {
-        AboutWindow aboutWindow = new AboutWindow();
-        if (getTheme() == Theme.LIGHT) {
-            aboutWindow.setLightStylesheets(getLightStylesheets());
-            aboutWindow.setTheme(Theme.LIGHT);
-        } else if (getTheme() == Theme.DARK) {
-            aboutWindow.setDarkStylesheets(getDarkStylesheets());
-            aboutWindow.setTheme(Theme.DARK);
-        }
-
-        aboutWindow.show();
-    }
-
-    private void nextTab() {
-        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
-        if (currIndex != tabBar.getTabs().size() - 1) {
-            tabBar.getSelectionModel().select(currIndex + 1);
-        }
-    }
-
-    private void prevTab() {
-        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
-        if (currIndex != 0) {
-            tabBar.getSelectionModel().select(currIndex - 1);
-        }
-    }
-
-    private void undo() {
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        centralNode.undo();
-    }
-
-    private void redo() {
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        centralNode.redo();
-    }
-
-    private void selectAll() {
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        centralNode.selectAll();
-    }
-
-    private void cut() {
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        centralNode.cut();
-    }
-
-    private void copy() {
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        centralNode.copy();
-    }
-
-    private void paste() {
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        centralNode.paste();
-    }
-
-    private void zoomIn() {
-        for (Tab tab : tabBar.getTabs()) {
-            CentralNode centralNode = (CentralNode) tab.getContent();
-            centralNode.zoomIn();
-        }
-    }
-
-    private void zoomOut() {
-        for (Tab tab : tabBar.getTabs()) {
-            CentralNode centralNode = (CentralNode) tab.getContent();
-            centralNode.zoomOut();
-        }
-    }
-
-    private void handleDragEvent(@NotNull DragEvent event) {
-        if (dragEventHandler != null) {
-            dragEventHandler.handle(event);
-        }
-    }
-
-    private void handleDropEvent(@NotNull DragEvent event) {
-        if (dropEventHandler != null) {
-            dropEventHandler.handle(event);
-        }
-    }
-
-    private void focusChanged(@NotNull ObservableValue<? extends Boolean> observable,
-                              @NotNull Boolean oldFocus,
-                              @NotNull Boolean isFocusedNow) {
-        if (tabBar.getSelectionModel().getSelectedIndex() == -1) {
-            return;
-        }
-
-        Tab currTab = tabBar.getSelectionModel().getSelectedItem();
-        CentralNode centralNode = (CentralNode) currTab.getContent();
-        if (inFocus == FieldInFocus.SOURCE) {
-            centralNode.focusOn(CentralNode.FieldInFocus.SOURCE);
-        } else if (inFocus == FieldInFocus.TARGET) {
-            centralNode.focusOn(CentralNode.FieldInFocus.TARGET);
-        }
-
-        menuBar.setUndoState(centralNode.isUndoAvailable());
-        menuBar.setRedoState(centralNode.isRedoAvailable());
-    }
-
-    private void tabSelectionChanged(@NotNull ObservableValue<? extends Number> observable,
-                                     @NotNull Number oldIndex,
-                                     @NotNull Number newIndex) {
-        int tabIndex = newIndex.intValue();
-        menuBar.setPrevTabState(tabIndex > 0);
-        menuBar.setNextTabState(tabIndex != tabBar.getTabs().size() - 1);
-
-        Tab tab = tabBar.getTabs().get(tabIndex);
-        CentralNode centralNode = (CentralNode) tab.getContent();
-        centralNode.focusOn(CentralNode.FieldInFocus.SOURCE);
-    }
-
-    private void sourceModeChanged(@NotNull ObservableValue<? extends String> observable,
-                                   String oldMode,
-                                   @NotNull String newMode) {
-        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
-        sourceModeListeners.forEach(listener -> listener.changed(newMode, currIndex));
-    }
-
-    private void targetModeChanged(@NotNull ObservableValue<? extends String> observable,
-                                   String oldMode,
-                                   @NotNull String newMode) {
-        int currIndex = tabBar.getSelectionModel().getSelectedIndex();
-        targetModeListeners.forEach(listener -> listener.changed(newMode, currIndex));
-    }
-
-    private void setTabTitle(@NotNull Tab tab, int tabIndex) {
-        List<Integer> tabNumbers = new LinkedList<>();
-        tabBar.getTabs().forEach(item -> {
-            StringBuilder tabTitle = new StringBuilder(item.getText());
-            tabTitle.delete(0, 4); // Delete "Tab "
-            try {
-                int tabNumber = Integer.parseInt(tabTitle.toString());
-                tabNumbers.add(tabNumber);  // The tab has a standard title "Tab i"
-            } catch (NumberFormatException ignored) {
-                // The tab had a custom title. Skip
-            }
-        });
-
-        Collections.sort(tabNumbers);
-        int i = 0;
-        for (; i < tabNumbers.size(); i++) {
-            if (tabNumbers.get(i) != i + 1) {
-                break;
-            }
-        }
-
-        String title = "Tab " + (i + 1);
-        tab.setText(title);
-        tabTitleListeners.forEach(listener -> listener.changed(title, tabIndex));
-    }
-
-    private void setUpCentralNode(@NotNull Tab tab, @NotNull CentralNode centralNode) {
-        if (targetFieldPolicy == TargetFieldPolicy.ALWAYS) {
-            centralNode.setTargetFieldPolicy(CentralNode.TargetFieldPolicy.ALWAYS);
-        } else if (targetFieldPolicy == TargetFieldPolicy.AS_NEEDED) {
-            centralNode.setTargetFieldPolicy(CentralNode.TargetFieldPolicy.AS_NEEDED);
-        }
-
-        if (wrappingPolicy == WrappingPolicy.WRAP_LINES) {
-            centralNode.setWrappingPolicy(CodeEditor.WrappingPolicy.WRAP_LINES);
-        } else if (wrappingPolicy == WrappingPolicy.NO_WRAP) {
-            centralNode.setWrappingPolicy(CodeEditor.WrappingPolicy.NO_WRAP);
-        }
-
-        if (highlighterPolicy == HighlighterPolicy.HIGHLIGHT) {
-            centralNode.setHighlighterPolicy(CodeEditor.HighlighterPolicy.HIGHLIGHT);
-        } else if (highlighterPolicy == HighlighterPolicy.DO_NOT_HIGHLIGHT) {
-            centralNode.setHighlighterPolicy(CodeEditor.HighlighterPolicy.DO_NOT_HIGHLIGHT);
-        }
-
-        if (lineNumbersPolicy == LineNumbersPolicy.SHOW) {
-            centralNode.setLineNumbersPolicy(CodeEditor.LineNumbersPolicy.SHOW);
-        } else if (lineNumbersPolicy == LineNumbersPolicy.DO_NOT_SHOW) {
-            centralNode.setLineNumbersPolicy(CodeEditor.LineNumbersPolicy.DO_NOT_SHOW);
-        }
-
-        centralNode.addSourceTextListener((observable, oldText, newText) -> {
-            menuBar.setUndoState(centralNode.isUndoAvailable());
-            menuBar.setRedoState(centralNode.isRedoAvailable());
-
-            int tabIndex = tabBar.getTabs().indexOf(tab);
-            sourceTextListeners.forEach(listener -> listener.changed(newText, tabIndex));
-        });
-
-        centralNode.addTargetTextListener((observable, oldText, newText) -> {
-            menuBar.setUndoState(centralNode.isUndoAvailable());
-            menuBar.setRedoState(centralNode.isRedoAvailable());
-
-            int tabIndex = tabBar.getTabs().indexOf(tab);
-            targetTextListeners.forEach(listener -> listener.changed(newText, tabIndex));
-        });
-
-        centralNode.addSourceLineListener((observable, oldLineIndex, newLineIndex) ->
-            statusBar.setLineNumber(newLineIndex + 1));
-
-        centralNode.addSourceColumnListener((observable, oldColumnIndex, newColumnIndex) ->
-            statusBar.setColumnNumber(newColumnIndex + 1));
-
-        centralNode.addTargetLineListener((observable, oldLineIndex, newLineIndex) ->
-            statusBar.setLineNumber(newLineIndex + 1));
-
-        centralNode.addTargetColumnListener((observable, oldColumnIndex, newColumnIndex) ->
-            statusBar.setColumnNumber(newColumnIndex + 1));
-
-        Runnable focusChanged = () -> {
-            int lineNumber = 0;
-            int columnNumber = 0;
-            if (inFocus == FieldInFocus.SOURCE) {
-                lineNumber = centralNode.getSourceLineIndex();
-                columnNumber = centralNode.getSourceColumnIndex();
-            } else if (inFocus == FieldInFocus.TARGET) {
-                lineNumber = centralNode.getTargetLineIndex();
-                columnNumber = centralNode.getTargetColumnIndex();
-            }
-
-            statusBar.setLineNumber(lineNumber + 1);
-            statusBar.setColumnNumber(columnNumber + 1);
-
-            menuBar.setUndoState(centralNode.isUndoAvailable());
-            menuBar.setRedoState(centralNode.isRedoAvailable());
-
-            int tabIndex = tabBar.getSelectionModel().getSelectedIndex();
-            focusListeners.forEach(listener -> listener.changed(inFocus, tabIndex));
-        };
-
-        centralNode.addSourceFocusListener((observable, oldFocus, isFocused) -> {
-            if (isFocused) {
-                inFocus = FieldInFocus.SOURCE;
-                focusChanged.run();
-            }
-        });
-
-        centralNode.addTargetFocusListener((observable, oldFocus, isFocused) -> {
-            if (isFocused) {
-                inFocus = FieldInFocus.TARGET;
-                focusChanged.run();
-            }
-        });
     }
 }

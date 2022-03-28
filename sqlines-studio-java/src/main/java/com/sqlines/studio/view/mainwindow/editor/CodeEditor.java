@@ -16,12 +16,6 @@
 
 package com.sqlines.studio.view.mainwindow.editor;
 
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.NavigationActions;
-import org.jetbrains.annotations.NotNull;
-
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -37,6 +31,13 @@ import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.NavigationActions;
+
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A text input field with the line number area, highlighter, fixed-width font,
  * scroll bars, context menu and undo manager.
@@ -50,19 +51,19 @@ public class CodeEditor extends VBox {
     private static final Highlighter highlighter = new Highlighter();
 
     /**
-     * An enumeration denoting the policy to be used by a {@link CodeEditor}
+     * An enumeration denoting the policy to be used by a CodeEditor
      * in deciding whether to wrap lines.
      */
     public enum WrappingPolicy { WRAP_LINES, NO_WRAP }
 
     /**
-     * An enumeration denoting the policy to be used by a {@link CodeEditor}
+     * An enumeration denoting the policy to be used by a CodeEditor
      * in deciding whether to highlight text.
      */
     public enum HighlighterPolicy { HIGHLIGHT, DO_NOT_HIGHLIGHT }
 
     /**
-     * An enumeration denoting the policy to be used by a {@link CodeEditor}
+     * An enumeration denoting the policy to be used by a CodeEditor
      * in deciding whether to show line number area.
      */
     public enum LineNumbersPolicy { SHOW, DO_NOT_SHOW }
@@ -91,8 +92,56 @@ public class CodeEditor extends VBox {
         getChildren().add(scrollPane);
     }
 
+    private void setUpHighlighter() {
+        codeArea.getVisibleParagraphs().addModificationObserver(styler);
+
+        // Auto-indent: insert previous line's indents on enter
+        Pattern whiteSpace = Pattern.compile( "^\\s+" );
+        addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                int caretPos = codeArea.getCaretPosition();
+                int currParagraph = codeArea.getCurrentParagraph();
+                CharSequence sequence = codeArea.getParagraph(currParagraph - 1).getSegments().get(0);
+                Matcher matcher = whiteSpace.matcher(sequence);
+                if (matcher.find()) {
+                    Platform.runLater(() -> codeArea.insertText(caretPos, matcher.group()));
+                }
+            }
+        });
+    }
+
+    private void setUpLineNumberArea() {
+        IntFunction<Node> lineNumFactory = LineNumberFactory.get(codeArea);
+        codeArea.setParagraphGraphicFactory(currLine -> {
+            HBox layout = new HBox(lineNumFactory.apply(currLine));
+            layout.setPadding(new Insets(0, 35, 0, 0));
+            return layout;
+        });
+    }
+
+    private void setUpContextMenu() {
+        EditorContextMenu menu = new EditorContextMenu();
+        menu.setOnUndoAction(event -> codeArea.undo());
+        menu.setOnRedoAction(event -> codeArea.redo());
+        menu.setOnSelectAllAction(event -> codeArea.selectAll());
+        menu.setOnCutAction(event -> codeArea.cut());
+        menu.setOnCopyAction(event -> codeArea.copy());
+        menu.setOnPasteAction(event -> codeArea.paste());
+
+        codeArea.setContextMenu(menu);
+        codeArea.setOnContextMenuRequested(event -> {
+            menu.setUndoEnabled(codeArea.isUndoAvailable());
+            menu.setRedoEnabled(codeArea.isRedoAvailable());
+        });
+    }
+
+    @Override
+    public void requestFocus() {
+        Platform.runLater(codeArea::requestFocus);
+    }
+
     /**
-     * @return text content of this text-editing area
+     * @return text content of this CodeEditor
      */
     public @NotNull String getText() {
         return codeArea.getText();
@@ -160,6 +209,15 @@ public class CodeEditor extends VBox {
         }
     }
 
+    private void removeHighlighter() {
+        codeArea.getVisibleParagraphs().removeModificationObserver(styler);
+
+        // Reset the current text to remove the currently applied highlighting
+        String currText = codeArea.getText();
+        codeArea.replaceText(currText);
+        codeArea.moveTo(0, 0, NavigationActions.SelectionPolicy.CLEAR);
+    }
+
     /**
      * Sets the {@link LineNumbersPolicy}.
      * <p>
@@ -195,7 +253,7 @@ public class CodeEditor extends VBox {
     }
 
     /**
-     * Selects everything in the text-editing area.
+     * Selects everything in the CodeEditor.
      */
     public void selectAll() {
         codeArea.selectAll();
@@ -216,7 +274,7 @@ public class CodeEditor extends VBox {
     }
 
     /**
-     * Inserts the content from the clipboard into this text-editing area,
+     * Inserts the content from the clipboard into this CodeEditor,
      * replacing the current selection.
      * If there is no selection, the content from the clipboard is inserted
      * at the current caret position.
@@ -240,7 +298,7 @@ public class CodeEditor extends VBox {
     }
 
     /**
-     * Increases the font size of the text-editing area by 1 px.
+     * Increases the font size of the CodeEditor by 1 px.
      */
     public void zoomIn() {
         fontSize++;
@@ -248,7 +306,7 @@ public class CodeEditor extends VBox {
     }
 
     /**
-     * Decreases the font size of the text-editing area by 1 px.
+     * Decreases the font size of the CodeEditor by 1 px.
      */
     public void zoomOut() {
         fontSize--;
@@ -295,67 +353,10 @@ public class CodeEditor extends VBox {
         codeArea.focusedProperty().addListener(listener);
     }
 
-    @Override
-    public void requestFocus() {
-        Platform.runLater(codeArea::requestFocus);
-    }
-
     /**
      * @return true if the text-editing area is in focus, false otherwise
      */
     public boolean hasFocus() {
         return codeArea.isFocused();
-    }
-
-    private void setUpHighlighter() {
-        codeArea.getVisibleParagraphs().addModificationObserver(styler);
-
-        // Auto-indent: insert previous line's indents on enter
-        Pattern whiteSpace = Pattern.compile( "^\\s+" );
-        addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
-            if (keyEvent.getCode() == KeyCode.ENTER) {
-                int caretPos = codeArea.getCaretPosition();
-                int currParagraph = codeArea.getCurrentParagraph();
-                CharSequence sequence = codeArea.getParagraph(currParagraph - 1).getSegments().get(0);
-                Matcher matcher = whiteSpace.matcher(sequence);
-                if (matcher.find()) {
-                    Platform.runLater(() -> codeArea.insertText(caretPos, matcher.group()));
-                }
-            }
-        });
-    }
-
-    private void removeHighlighter() {
-        codeArea.getVisibleParagraphs().removeModificationObserver(styler);
-
-        // Reset the current text to remove the currently applied highlighting
-        String currText = codeArea.getText();
-        codeArea.replaceText(currText);
-        codeArea.moveTo(0, 0, NavigationActions.SelectionPolicy.CLEAR);
-    }
-
-    private void setUpLineNumberArea() {
-        IntFunction<Node> lineNumFactory = LineNumberFactory.get(codeArea);
-        codeArea.setParagraphGraphicFactory(currLine -> {
-            HBox layout = new HBox(lineNumFactory.apply(currLine));
-            layout.setPadding(new Insets(0, 35, 0, 0));
-            return layout;
-        });
-    }
-
-    private void setUpContextMenu() {
-        ContextMenu menu = new ContextMenu();
-        menu.setOnUndoAction(event -> codeArea.undo());
-        menu.setOnRedoAction(event -> codeArea.redo());
-        menu.setOnSelectAllAction(event -> codeArea.selectAll());
-        menu.setOnCutAction(event -> codeArea.cut());
-        menu.setOnCopyAction(event -> codeArea.copy());
-        menu.setOnPasteAction(event -> codeArea.paste());
-
-        codeArea.setContextMenu(menu);
-        codeArea.setOnContextMenuRequested(event -> {
-            menu.setUndoState(codeArea.isUndoAvailable());
-            menu.setRedoState(codeArea.isRedoAvailable());
-        });
     }
 }

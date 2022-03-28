@@ -20,14 +20,14 @@ import com.sqlines.studio.view.BaseView;
 import com.sqlines.studio.view.Window;
 import com.sqlines.studio.view.settings.event.ChangeLicenseEvent;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface through with the presenter / controller can interact with the settings window UI.

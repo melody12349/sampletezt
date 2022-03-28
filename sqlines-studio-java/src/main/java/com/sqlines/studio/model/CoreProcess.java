@@ -16,12 +16,13 @@
 
 package com.sqlines.studio.model;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * SQLines command-line program.
@@ -52,6 +53,37 @@ public class CoreProcess {
         String[] args = { getProcessPath(),
                           "-log=" + logFilePath };
         runAndWait(args);
+    }
+
+    private @NotNull String getProcessPath() {
+        String processPath = System.getProperty("model.app-dir");
+        boolean osIsWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+        if (osIsWindows) {
+            processPath += "/sqlines.exe";
+        } else {
+            processPath += "/sqlines";
+        }
+
+        if (!new File(processPath).exists()) {
+            throw new IllegalStateException("SQLines command-line program was not found:\n"
+                    + processPath);
+        }
+
+        return processPath;
+    }
+
+    private void runAndWait(@NotNull String[] args) throws IOException {
+        output = "";
+        try {
+            Process process = new ProcessBuilder(args).start();
+            logger.info("Running SQLines command-line program: " + args);
+            process.waitFor();
+            logger.info("SQLines command-line program finished successfully");
+            output = new String(process.getInputStream().readAllBytes());
+
+        } catch (InterruptedException e) {
+            logger.error("SQLines command-line program crashed: " + e.getMessage());
+        }
     }
 
     /**
@@ -95,36 +127,5 @@ public class CoreProcess {
      */
     public @NotNull String getOutput() {
         return output;
-    }
-
-    private @NotNull String getProcessPath() {
-        String processPath = System.getProperty("model.app-dir");
-        boolean osIsWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
-        if (osIsWindows) {
-            processPath += "/sqlines.exe";
-        } else {
-            processPath += "/sqlines";
-        }
-
-        if (!new File(processPath).exists()) {
-            throw new IllegalStateException("SQLines command-line program was not found:\n"
-                    + processPath);
-        }
-
-        return processPath;
-    }
-
-    private void runAndWait(@NotNull String[] args) throws IOException {
-        output = "";
-        try {
-            Process process = new ProcessBuilder(args).start();
-            logger.info("Running SQLines command-line program: " + args);
-            process.waitFor();
-            logger.info("SQLines command-line program finished successfully");
-            output = new String(process.getInputStream().readAllBytes());
-
-        } catch (InterruptedException e) {
-            logger.error("SQLines command-line program crashed: " + e.getMessage());
-        }
     }
 }

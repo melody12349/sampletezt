@@ -27,7 +27,7 @@ public class TabCloseEvent extends Event {
     private final int tabIndex;
 
     /**
-     * Creates a new {@link TabCloseEvent} with the index of the tab requesting closure.
+     * Constructs a new TabCloseEvent with the index of the tab requesting closure.
      * <p>
      * The source and target of the event is set to {@link Event#NULL_SOURCE_TARGET}.
      *

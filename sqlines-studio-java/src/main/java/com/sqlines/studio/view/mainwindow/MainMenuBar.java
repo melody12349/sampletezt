@@ -19,18 +19,21 @@ package com.sqlines.studio.view.mainwindow;
 import com.sqlines.studio.view.mainwindow.event.RecentFileEvent;
 
 import de.jangassen.MenuToolkit;
-import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+
+import org.jetbrains.annotations.NotNull;
+
 
 /**
  * Drop down menus at the top of the application window.
@@ -45,10 +48,10 @@ import javafx.scene.input.KeyCombination;
  * <li>View
  * <li>Tools
  * <li>Help
- *
- * @apiNote Initially, all menu items are active.
  */
-class MenuBar extends javafx.scene.control.MenuBar {
+class MainMenuBar extends MenuBar {
+    private EventHandler<RecentFileEvent> recentFileEventHandler;
+
     // Main tab menu items
     private final MenuItem aboutMenuItem = new MenuItem();
     private final MenuItem preferencesMenuItem = new MenuItem();
@@ -88,15 +91,14 @@ class MenuBar extends javafx.scene.control.MenuBar {
     private final MenuItem onlineHelpMenuItem = new MenuItem();
     private final MenuItem openSiteMenuItem = new MenuItem();
 
-    private EventHandler<RecentFileEvent> recentFileEventHandler;
-
-    public MenuBar() {
+    public MainMenuBar() {
         if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
             useSystemMenuBarProperty().set(true);
 
             MenuToolkit toolkit = MenuToolkit.toolkit();
             Menu defaultMenu = toolkit.createDefaultApplicationMenu("SQLines Studio");
-            toolkit.setApplicationMenu(makeMainMenu(defaultMenu));
+            makeMainMenu(defaultMenu);
+            toolkit.setApplicationMenu(defaultMenu);
             toolkit.setMenuBar(this);
         }
 
@@ -105,6 +107,119 @@ class MenuBar extends javafx.scene.control.MenuBar {
         makeViewMenu();
         makeToolsMenu();
         makeHelpMenu();
+    }
+
+    private void makeMainMenu(@NotNull Menu defaultMenu) {
+        aboutMenuItem.setText("About SQLines Studio...");
+        preferencesMenuItem.setText("Preferences...");
+
+        defaultMenu.getItems().set(0, aboutMenuItem);
+        defaultMenu.getItems().set(1, preferencesMenuItem);
+        defaultMenu.getItems().add(2, new SeparatorMenuItem());
+    }
+
+    private void makeFileMenu() {
+        newTabMenuItem.setText("New Tab");
+        newTabMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN));
+
+        closeTabMenuItem.setText("Close Tab");
+        closeTabMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN));
+
+        nextTabMenuItem.setText("Next Tab");
+        nextTabMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHORTCUT_DOWN));
+
+        prevTabMenuItem.setText("Previous Tab");
+        prevTabMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHORTCUT_DOWN));
+
+        openFileMenuItem.setText("Open File...");
+        openFileMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN));
+
+        clearRecentMenuItem.setText("Clear");
+
+        openRecentMenu.setText("Open Recent");
+        openRecentMenu.getItems().add(new SeparatorMenuItem());
+        openRecentMenu.getItems().add(clearRecentMenuItem);
+
+        saveFileMenuItem.setText("Save File");
+        saveFileMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
+
+        saveFileAsMenuItem.setText("Save File As...");
+        saveFileAsMenuItem.setAccelerator(
+                new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN)
+        );
+
+        Menu fileMenu = new Menu("File");
+        fileMenu.getItems().addAll(newTabMenuItem, closeTabMenuItem, nextTabMenuItem,
+                prevTabMenuItem, new SeparatorMenuItem(), openFileMenuItem, openRecentMenu,
+                saveFileMenuItem, saveFileAsMenuItem);
+
+        getMenus().add(fileMenu);
+    }
+
+    private void makeEditMenu() {
+        undoMenuItem.setText("Undo");
+        redoMenuItem.setText("Redo");
+        selectAllMenuItem.setText("Select All");
+        cutMenuItem.setText("Cut");
+        copyMenuItem.setText("Copy");
+        pasteMenuItem.setText("Paste");
+
+        Menu editMenu = new Menu("Edit");
+        editMenu.getItems().addAll(undoMenuItem, redoMenuItem, new SeparatorMenuItem(),
+                selectAllMenuItem, cutMenuItem, copyMenuItem, pasteMenuItem);
+
+        getMenus().add(editMenu);
+    }
+
+    private void makeViewMenu() {
+        zoomInMenuItem.setText("Zoom In");
+        zoomInMenuItem.setAccelerator(
+                new KeyCodeCombination(KeyCode.A, KeyCombination.SHIFT_DOWN, KeyCombination.SHORTCUT_DOWN)
+        );
+
+        zoomOutMenuItem.setText("Zoom Out");
+        zoomOutMenuItem.setAccelerator(
+                new KeyCodeCombination(KeyCode.E, KeyCombination.SHIFT_DOWN, KeyCombination.SHORTCUT_DOWN)
+        );
+
+        statusBarMenuItem.setText("Show Status Bar");
+        targetFieldMenuItem.setText("Always Show Target Field");
+        wrappingMenuItem.setText("Wrap Lines To Editor Width");
+        highlighterMenuItem.setText("Highlighter");
+        lineNumbersMenuItem.setText("Line Numbers");
+
+        Menu editorMenu = new Menu("Editor");
+        editorMenu.getItems().addAll(wrappingMenuItem, highlighterMenuItem, lineNumbersMenuItem);
+
+        Menu viewMenu = new Menu("View");
+        viewMenu.getItems().addAll(zoomInMenuItem, zoomOutMenuItem, new SeparatorMenuItem(),
+                statusBarMenuItem, targetFieldMenuItem, new SeparatorMenuItem(), editorMenu);
+
+        getMenus().add(viewMenu);
+    }
+
+    private void makeToolsMenu() {
+        runMenuItem.setText("Run Conversion");
+        runMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN));
+
+        Menu toolsMenu = new Menu("Tools");
+        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
+            preferencesMenuItem.setText("Settings");
+            toolsMenu.getItems().addAll(preferencesMenuItem, new SeparatorMenuItem());
+        }
+
+        toolsMenu.getItems().add(runMenuItem);
+        getMenus().add(toolsMenu);
+    }
+
+    private void makeHelpMenu() {
+        onlineHelpMenuItem.setText("Online Help...");
+        openSiteMenuItem.setText("Official Site...");
+
+        Menu helpMenu = new Menu("Help");
+        helpMenu.getItems().addAll(onlineHelpMenuItem, openSiteMenuItem);
+
+        getMenus().add(helpMenu);
     }
 
     /**
@@ -123,7 +238,6 @@ class MenuBar extends javafx.scene.control.MenuBar {
         newFile.setOnAction(event -> {
             RecentFileEvent recentFileEvent = new RecentFileEvent(filePath);
             fireEvent(recentFileEvent);
-
             if (recentFileEventHandler != null) {
                 recentFileEventHandler.handle(recentFileEvent);
             }
@@ -523,134 +637,5 @@ class MenuBar extends javafx.scene.control.MenuBar {
      */
     public void setOnOpenSiteAction(@NotNull EventHandler<ActionEvent> action) {
         openSiteMenuItem.setOnAction(action);
-    }
-
-    private @NotNull Menu makeMainMenu(@NotNull Menu defaultMenu) {
-        aboutMenuItem.setText("About SQLines Studio...");
-        preferencesMenuItem.setText("Preferences...");
-
-        defaultMenu.getItems().set(0, aboutMenuItem);
-        defaultMenu.getItems().set(1, preferencesMenuItem);
-        defaultMenu.getItems().add(2, new SeparatorMenuItem());
-
-        return defaultMenu;
-    }
-
-    private void makeFileMenu() {
-        newTabMenuItem.setText("New Tab");
-        KeyCombination newTab = new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN);
-        newTabMenuItem.setAccelerator(newTab);
-
-        closeTabMenuItem.setText("Close Tab");
-        KeyCombination closeTab = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
-        closeTabMenuItem.setAccelerator(closeTab);
-
-        nextTabMenuItem.setText("Next Tab");
-        KeyCombination nextTab = new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHORTCUT_DOWN);
-        nextTabMenuItem.setAccelerator(nextTab);
-
-        prevTabMenuItem.setText("Previous Tab");
-        KeyCombination prevTab = new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHORTCUT_DOWN);
-        prevTabMenuItem.setAccelerator(prevTab);
-
-        openFileMenuItem.setText("Open File...");
-        KeyCombination openFile = new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN);
-        openFileMenuItem.setAccelerator(openFile);
-
-        clearRecentMenuItem.setText("Clear");
-
-        openRecentMenu.setText("Open Recent");
-        openRecentMenu.getItems().add(new SeparatorMenuItem());
-        openRecentMenu.getItems().add(clearRecentMenuItem);
-
-        saveFileMenuItem.setText("Save File");
-        KeyCombination saveFile = new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN);
-        saveFileMenuItem.setAccelerator(saveFile);
-
-        saveFileAsMenuItem.setText("Save File As...");
-        KeyCombination saveFileAs = new KeyCodeCombination(KeyCode.S,
-                KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN);
-        saveFileAsMenuItem.setAccelerator(saveFileAs);
-
-        Menu fileMenu = new Menu("File");
-        fileMenu.getItems().addAll(newTabMenuItem, closeTabMenuItem,
-                nextTabMenuItem, prevTabMenuItem);
-        fileMenu.getItems().add(new SeparatorMenuItem());
-        fileMenu.getItems().addAll(openFileMenuItem, openRecentMenu,
-                saveFileMenuItem, saveFileAsMenuItem);
-
-        getMenus().add(fileMenu);
-    }
-
-    private void makeEditMenu() {
-        undoMenuItem.setText("Undo");
-        redoMenuItem.setText("Redo");
-        selectAllMenuItem.setText("Select All");
-        cutMenuItem.setText("Cut");
-        copyMenuItem.setText("Copy");
-        pasteMenuItem.setText("Paste");
-
-        Menu editMenu = new Menu("Edit");
-        editMenu.getItems().addAll(undoMenuItem, redoMenuItem);
-        editMenu.getItems().add(new SeparatorMenuItem());
-        editMenu.getItems().addAll(selectAllMenuItem, cutMenuItem, copyMenuItem, pasteMenuItem);
-
-        getMenus().add(editMenu);
-    }
-
-    private void makeViewMenu() {
-        zoomInMenuItem.setText("Zoom In");
-        KeyCombination zoomIn = new KeyCodeCombination(KeyCode.A,
-                KeyCombination.SHIFT_DOWN, KeyCombination.SHORTCUT_DOWN);
-        zoomInMenuItem.setAccelerator(zoomIn);
-
-        zoomOutMenuItem.setText("Zoom Out");
-        KeyCombination zoomOut = new KeyCodeCombination(KeyCode.E,
-                KeyCombination.SHIFT_DOWN, KeyCombination.SHORTCUT_DOWN);
-        zoomOutMenuItem.setAccelerator(zoomOut);
-
-        statusBarMenuItem.setText("Show Status Bar");
-        targetFieldMenuItem.setText("Always Show Target Field");
-        wrappingMenuItem.setText("Wrap Lines To Editor Width");
-        highlighterMenuItem.setText("Highlighter");
-        lineNumbersMenuItem.setText("Line Numbers");
-
-        Menu editorMenu = new Menu("Editor");
-        editorMenu.getItems().addAll(wrappingMenuItem, highlighterMenuItem, lineNumbersMenuItem);
-
-        Menu viewMenu = new Menu("View");
-        viewMenu.getItems().addAll(zoomInMenuItem, zoomOutMenuItem);
-        viewMenu.getItems().add(new SeparatorMenuItem());
-        viewMenu.getItems().addAll(statusBarMenuItem, targetFieldMenuItem);
-        viewMenu.getItems().add(new SeparatorMenuItem());
-        viewMenu.getItems().add(editorMenu);
-
-        getMenus().add(viewMenu);
-    }
-
-    private void makeToolsMenu() {
-        runMenuItem.setText("Run Conversion");
-        KeyCombination run = new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN);
-        runMenuItem.setAccelerator(run);
-
-        Menu toolsMenu = new Menu("Tools");
-        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
-            preferencesMenuItem.setText("Settings");
-            toolsMenu.getItems().add(preferencesMenuItem);
-            toolsMenu.getItems().add(new SeparatorMenuItem());
-        }
-
-        toolsMenu.getItems().add(runMenuItem);
-        getMenus().add(toolsMenu);
-    }
-
-    private void makeHelpMenu() {
-        onlineHelpMenuItem.setText("Online Help...");
-        openSiteMenuItem.setText("Official Site...");
-
-        Menu helpMenu = new Menu("Help");
-        helpMenu.getItems().addAll(onlineHelpMenuItem, openSiteMenuItem);
-
-        getMenus().add(helpMenu);
     }
 }
