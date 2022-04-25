@@ -60,7 +60,7 @@ public class Application extends javafx.application.Application {
             PropertiesLoader.loadProperties();
             logger.info("Properties loaded");
         } catch (Exception e) {
-            logger.error("Properties loading failed: " + e.getMessage());
+            logger.warn("Properties loading failed: " + e.getMessage());
             PropertiesLoader.setDefaults();
         }
 
@@ -164,7 +164,7 @@ public class Application extends javafx.application.Application {
             tabsDataStream.writeObject(tabsData);
             fileHandlerStream.writeObject(fileHandler);
         } catch (Exception e) {
-            logger.error("init() - Serialization error: " + e.getMessage());
+            logger.warn("init() - Serialization error: " + e.getMessage());
         }
     }
 
@@ -176,7 +176,7 @@ public class Application extends javafx.application.Application {
             tabsData = (ObservableTabsData) tabsDataStream.readObject();
             fileHandler = (FileHandler) fileHandlerStream.readObject();
         } catch (Exception e) {
-            logger.error("Deserialization error: " + e.getMessage());
+            logger.warn("Deserialization error: " + e.getMessage());
             tabsData = new ObservableTabsData();
             fileHandler = new FileHandler();
         } finally {

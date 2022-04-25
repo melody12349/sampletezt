@@ -54,7 +54,7 @@ public class License implements Runnable {
             File file = getLicenseFile();
             lastModified = file.lastModified();
         } catch (Exception e) {
-            logger.error("License file not found: " + e.getMessage());
+            logger.warn("License file not found: " + e.getMessage());
         }
     }
 
@@ -77,7 +77,7 @@ public class License implements Runnable {
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
-                logger.error("run() - " + e.getMessage());
+                logger.warn("run() - " + e.getMessage());
                 break;
             }
         }
