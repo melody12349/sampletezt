@@ -76,7 +76,7 @@ public class PropertiesLoader {
      * | model.last-dir     | "null"                                   |
      * | view.theme         | "light"                                  |
      * | view.status-bar    | "show"                                   |
-     * | view.target-field  | "as-needed"                              |
+     * | view.target-field  | "always"                                 |
      * | view.wrapping      | "disabled"                               |
      * | view.highlighter   | "enabled"                                |
      * | view.line-numbers  | "enabled"                                |
@@ -99,7 +99,7 @@ public class PropertiesLoader {
         properties.setProperty("model.last-dir", "null");
         properties.setProperty("view.theme", "light");
         properties.setProperty("view.status-bar", "show");
-        properties.setProperty("view.target-field", "as-needed");
+        properties.setProperty("view.target-field", "always");
         properties.setProperty("view.wrapping", "disabled");
         properties.setProperty("view.highlighter", "enabled");
         properties.setProperty("view.line-numbers", "enabled");
