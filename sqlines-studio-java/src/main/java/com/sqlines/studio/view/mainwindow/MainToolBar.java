@@ -61,7 +61,16 @@ class MainToolBar extends ToolBar {
      * were not found in application resources
      */
     public MainToolBar() {
-        // Stop the tab key and the arrow keys from navigating through the controls
+        ignoreKeyEvents();
+        setUpNewTabButton();
+        setUpOpenFileButton();
+        setUpSaveFileButton();
+        setUpRunButton();
+        setUpModeBoxes();
+        setUpLayout();
+    }
+
+    private void ignoreKeyEvents() {
         addEventFilter(KeyEvent.ANY, keyEvent -> {
             if (keyEvent.getCode() == KeyCode.TAB
                     || keyEvent.getCode() == KeyCode.RIGHT
@@ -71,36 +80,90 @@ class MainToolBar extends ToolBar {
                 keyEvent.consume();
             }
         });
+    }
 
-        URL[] icons = loadIcons();
-
-        ImageView newTabImg = new ImageView(new Image(icons[0].toExternalForm()));
+    private void setUpNewTabButton() {
+        String newTabIconUrl = loadNewTabIcon().toExternalForm();
+        ImageView newTabImg = new ImageView(new Image(newTabIconUrl));
         newTabImg.setFitHeight(17);
         newTabImg.setFitWidth(17);
         newTabButton.setGraphic(newTabImg);
         newTabButton.setTooltip(new Tooltip("New tab"));
+    }
 
-        ImageView openFileImg = new ImageView(new Image(icons[1].toExternalForm()));
+    private URL loadNewTabIcon() {
+        URL newTabIconUrl = getClass().getResource("/icons/open-tab.png");
+        if (newTabIconUrl == null) {
+            String errorMsg = "File not found in application resources: icons/open-tab.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        return newTabIconUrl;
+    }
+
+    private void setUpOpenFileButton() {
+        String openFileIconUrl = loadOpenFileIcon().toExternalForm();
+        ImageView openFileImg = new ImageView(new Image(openFileIconUrl));
         openFileImg.setFitHeight(17);
         openFileImg.setFitWidth(17);
         openFileButton.setGraphic(openFileImg);
         openFileButton.setTooltip(new Tooltip("Open file"));
+    }
 
-        ImageView saveFileImg = new ImageView(new Image(icons[2].toExternalForm()));
+    private URL loadOpenFileIcon() {
+        URL openFileIconUrl = getClass().getResource("/icons/open-file.png");
+        if (openFileIconUrl == null) {
+            String errorMsg = "File not found in application resources: icons/open-file.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        return openFileIconUrl;
+    }
+
+    private void setUpSaveFileButton() {
+        String saveFileIconUrl = loadSaveFileIcon().toExternalForm();
+        ImageView saveFileImg = new ImageView(new Image(saveFileIconUrl));
         saveFileImg.setFitHeight(17);
         saveFileImg.setFitWidth(17);
         saveFileButton.setGraphic(saveFileImg);
         saveFileButton.setTooltip(new Tooltip("Save file"));
+    }
 
-        ImageView runImg = new ImageView(new Image(icons[3].toExternalForm()));
+    private URL loadSaveFileIcon() {
+        URL saveFileIconUrl = getClass().getResource("/icons/save-file.png");
+        if (saveFileIconUrl == null) {
+            String errorMsg = "File not found in application resources: icons/save-file.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        return saveFileIconUrl;
+    }
+
+    private void setUpRunButton() {
+        String runButtonIconUrl = loadRunButtonIcon().toExternalForm();
+        ImageView runImg = new ImageView(new Image(runButtonIconUrl));
         runImg.setFitHeight(17);
         runImg.setFitWidth(17);
         runButton.setGraphic(runImg);
         runButton.setTooltip(new Tooltip("Run conversion"));
+    }
 
+    private URL loadRunButtonIcon() {
+        URL runImgUrl = getClass().getResource("/icons/run.png");
+        if (runImgUrl == null) {
+            String errorMsg = "File not found in application resources: icons/run.png";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        return runImgUrl;
+    }
+
+    private void setUpModeBoxes() {
         sourceModesBox.setTooltip(new Tooltip("Source conversion mode"));
         targetModesBox.setTooltip(new Tooltip("Target conversion mode"));
+    }
 
+    private void setUpLayout() {
         getItems().add(newTabButton);
         getItems().add(new Separator());
         getItems().addAll(openFileButton, saveFileButton);
@@ -109,34 +172,6 @@ class MainToolBar extends ToolBar {
         getItems().add(new Separator());
         getItems().addAll(new Text(" Source:  "), sourceModesBox,
                 new Text(" Target:  "), targetModesBox);
-    }
-
-    private @NotNull URL[] loadIcons() {
-        URL newTabImgUrl = getClass().getResource("/icons/open-tab.png");
-        if (newTabImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/open-tab.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        URL openFileImgUrl = getClass().getResource("/icons/open-file.png");
-        if (openFileImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/open-file.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        URL saveFileImgUrl = getClass().getResource("/icons/save-file.png");
-        if (saveFileImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/save-file.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        URL runImgUrl = getClass().getResource("/icons/run.png");
-        if (runImgUrl == null) {
-            String errorMsg = "File not found in application resources: icons/run.png";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        return new URL[] { newTabImgUrl, openFileImgUrl, saveFileImgUrl, runImgUrl };
     }
 
     /**

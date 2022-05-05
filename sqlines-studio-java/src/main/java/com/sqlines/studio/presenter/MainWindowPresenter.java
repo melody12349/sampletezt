@@ -191,7 +191,7 @@ public class MainWindowPresenter {
             view.setTargetMode(tabsData.getTargetMode(newIndex));
             view.addTargetModeListener(viewTargetModeListener);
 
-            MainWindowView.FieldInFocus inFocus = view.getFieldInFocus(newIndex);
+            MainWindowView.FieldInFocus inFocus = view.inFocus(newIndex);
             if (inFocus == MainWindowView.FieldInFocus.SOURCE) {
                 view.showFilePath(tabsData.getSourceFilePath(newIndex));
             } else if (inFocus == MainWindowView.FieldInFocus.TARGET) {
@@ -242,7 +242,7 @@ public class MainWindowPresenter {
 
     private void modelSourcePathChanged(@NotNull String newPath, int tabIndex) {
         if (tabIndex == tabsData.getCurrTabIndex()) {
-            MainWindowView.FieldInFocus inFocus = view.getFieldInFocus(tabIndex);
+            MainWindowView.FieldInFocus inFocus = view.inFocus(tabIndex);
             if (inFocus == MainWindowView.FieldInFocus.SOURCE
                     || inFocus == MainWindowView.FieldInFocus.NONE) {
                 Platform.runLater(() -> view.showFilePath(newPath));
@@ -252,7 +252,7 @@ public class MainWindowPresenter {
 
     private void modelTargetPathChanged(@NotNull String newPath, int tabIndex) {
         if (tabIndex == tabsData.getCurrTabIndex()) {
-            MainWindowView.FieldInFocus inFocus = view.getFieldInFocus(tabIndex);
+            MainWindowView.FieldInFocus inFocus = view.inFocus(tabIndex);
             if (inFocus == MainWindowView.FieldInFocus.TARGET
                     || inFocus == MainWindowView.FieldInFocus.NONE) {
                 Platform.runLater(() -> view.showFilePath(newPath));
@@ -288,7 +288,7 @@ public class MainWindowPresenter {
             view.setTargetMode(tabsData.getTargetMode(tabIndex));
         }
 
-        MainWindowView.FieldInFocus inFocus = view.getFieldInFocus(tabIndex);
+        MainWindowView.FieldInFocus inFocus = view.inFocus(tabIndex);
         if (inFocus == MainWindowView.FieldInFocus.SOURCE) {
             view.showFilePath(tabsData.getSourceFilePath(tabIndex));
         } else if (inFocus == MainWindowView.FieldInFocus.TARGET) {
@@ -397,7 +397,13 @@ public class MainWindowPresenter {
         Optional<File> initialDir = Optional.ofNullable(lastDir)
                 .flatMap(path -> (path.equals("null") ? Optional.empty() : Optional.of(path)))
                 .flatMap(path -> Optional.of(new File(path)));
-        Optional<List<File>> selectedFiles = view.choseFilesToOpen(initialDir);
+        Optional<List<File>> selectedFiles;
+        if (initialDir.isPresent()) {
+            selectedFiles = view.choseFilesToOpen(initialDir.get());
+        } else {
+            selectedFiles = view.choseFilesToOpen();
+        }
+
         if (selectedFiles.isEmpty()) {
             logger.info("No files to open");
             return;
@@ -422,7 +428,7 @@ public class MainWindowPresenter {
 
     private void saveFilePressed() {
         int currIndex = tabsData.getCurrTabIndex();
-        MainWindowView.FieldInFocus inFocus = view.getFieldInFocus(currIndex);
+        MainWindowView.FieldInFocus inFocus = view.inFocus(currIndex);
         try {
             if (inFocus == MainWindowView.FieldInFocus.SOURCE) {
                 if (tabsData.getSourceFilePath(currIndex).isEmpty()) {
@@ -451,7 +457,7 @@ public class MainWindowPresenter {
 
     private void saveFileAsPressed() {
         int currIndex = tabsData.getCurrTabIndex();
-        MainWindowView.FieldInFocus inFocus = view.getFieldInFocus(currIndex);
+        MainWindowView.FieldInFocus inFocus = view.inFocus(currIndex);
         Optional<String> optionalFilePath = view.choseFileSavingLocation();
         String filePath;
         if (optionalFilePath.isPresent()) {

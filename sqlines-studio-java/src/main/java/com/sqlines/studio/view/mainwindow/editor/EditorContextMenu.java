@@ -22,8 +22,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A popup control that appears on the right-click.
  * <p>
@@ -44,16 +42,22 @@ class EditorContextMenu extends ContextMenu {
     private final MenuItem pasteMenuItem = new MenuItem();
 
     public EditorContextMenu() {
+        setUpMenuItems();
+        setUpLayout();
+    }
+
+    private void setUpMenuItems() {
         undoMenuItem.setText("Undo");
         redoMenuItem.setText("Redo");
         selectAllMenuItem.setText("Select All");
         cutMenuItem.setText("Cut");
         copyMenuItem.setText("Copy");
         pasteMenuItem.setText("Paste");
+    }
 
-        getItems().addAll(undoMenuItem, redoMenuItem);
-        getItems().add(new SeparatorMenuItem());
-        getItems().addAll(selectAllMenuItem, cutMenuItem, copyMenuItem, pasteMenuItem);
+    private void setUpLayout() {
+        getItems().addAll(undoMenuItem, redoMenuItem, new SeparatorMenuItem(),
+                selectAllMenuItem, cutMenuItem, copyMenuItem, pasteMenuItem);
     }
 
     /**
@@ -79,7 +83,7 @@ class EditorContextMenu extends ContextMenu {
      *
      * @param action the action to register
      */
-    public void setOnUndoAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnUndoAction(EventHandler<ActionEvent> action) {
         undoMenuItem.setOnAction(action);
     }
 
@@ -88,7 +92,7 @@ class EditorContextMenu extends ContextMenu {
      *
      * @param action the action to register
      */
-    public void setOnRedoAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnRedoAction(EventHandler<ActionEvent> action) {
         redoMenuItem.setOnAction(action);
     }
 
@@ -97,7 +101,7 @@ class EditorContextMenu extends ContextMenu {
      *
      * @param action the action to register
      */
-    public void setOnSelectAllAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSelectAllAction(EventHandler<ActionEvent> action) {
         selectAllMenuItem.setOnAction(action);
     }
 
@@ -106,7 +110,7 @@ class EditorContextMenu extends ContextMenu {
      *
      * @param action the action to register
      */
-    public void setOnCutAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnCutAction(EventHandler<ActionEvent> action) {
         cutMenuItem.setOnAction(action);
     }
 
@@ -115,7 +119,7 @@ class EditorContextMenu extends ContextMenu {
      *
      * @param action the action to register
      */
-    public void setOnCopyAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnCopyAction(EventHandler<ActionEvent> action) {
         copyMenuItem.setOnAction(action);
     }
 
@@ -124,7 +128,7 @@ class EditorContextMenu extends ContextMenu {
      *
      * @param action the action to register
      */
-    public void setOnPasteAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnPasteAction(EventHandler<ActionEvent> action) {
         pasteMenuItem.setOnAction(action);
     }
 }

@@ -17,6 +17,7 @@
 package com.sqlines.studio.view;
 
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -30,12 +31,10 @@ import javafx.stage.StageStyle;
 
 import java.net.URL;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Provides a message for informing the user about an occurred error.
  */
-public class ErrorWindow extends Window {
+public class ErrorWindow extends AbstractWindow {
 
     /**
      * Constructs a new ErrorWindow with the specified window title and message.
@@ -45,45 +44,75 @@ public class ErrorWindow extends Window {
      *
      * @throws IllegalStateException if error icon was not found in application resources
      */
-    public ErrorWindow(@NotNull String title, @NotNull String message) {
-        setRoot(makeCentralNode(message));
-        initModality(Modality.APPLICATION_MODAL);
-        initStyle(StageStyle.UTILITY);
-        setTitle(title);
-        sizeToScene();
-        setResizable(false);
+    public ErrorWindow(String title, String message) {
+        setUpScene(message);
+        setUpWindow(title);
     }
-    
-    private @NotNull BorderPane makeCentralNode(@NotNull String message) {
+
+    private void setUpScene(String message) {
+        Parent errorImage = createErrorImageLayout();
+        Parent textLayout = createTextLayout(message);
+        Parent buttonLayout = createButtonlayout();
+        Parent mainLayout = createMainLayout(errorImage, textLayout, buttonLayout);
+
+        setRoot(mainLayout);
+    }
+
+    private Parent createErrorImageLayout() {
+        String imageUrl = loadErrorIcon().toExternalForm();
+        ImageView image = new ImageView(new Image(imageUrl));
+        image.setFitWidth(60);
+        image.setFitHeight(60);
+
+        HBox imageLayout = new HBox(image);
+        imageLayout.setPadding(new Insets(15, 15, 15, 10));
+
+        return imageLayout;
+    }
+
+    private URL loadErrorIcon() {
         URL iconUrl = getClass().getResource("/icons/error.png");
         if (iconUrl == null) {
             String errorMsg = "File not found in application resources: icons/error.png";
             throw new IllegalStateException(errorMsg);
         }
 
-        ImageView icon = new ImageView(new Image(iconUrl.toExternalForm()));
-        icon.setFitWidth(60);
-        icon.setFitHeight(60);
+        return iconUrl;
+    }
 
-        Button okButton = new Button("Ok");
-        okButton.setOnAction( event -> close() );
-
-        HBox imageLayout = new HBox(icon);
-        imageLayout.setPadding(new Insets(15, 15, 15, 10));
-
+    private Parent createTextLayout(String message) {
         VBox textLayout = new VBox(new Text(message));
         textLayout.setSpacing(15);
         textLayout.setPadding(new Insets(30, 15, 15, 0));
 
+        return textLayout;
+    }
+
+    private Parent createButtonlayout() {
+        Button okButton = new Button("Ok");
+        okButton.setOnAction(event -> close());
+
         HBox buttonLayout = new HBox(okButton);
         buttonLayout.setPadding(new Insets(0, 0, 0, 6));
 
+        return buttonLayout;
+    }
+
+    private Parent createMainLayout(Parent errorImage, Parent textLayout, Parent buttonLayout) {
         BorderPane mainLayout = new BorderPane();
         mainLayout.setId("errorWindow");
-        mainLayout.setLeft(imageLayout);
+        mainLayout.setLeft(errorImage);
         mainLayout.setCenter(textLayout);
         mainLayout.setBottom(new ToolBar(buttonLayout));
 
         return mainLayout;
+    }
+
+    private void setUpWindow(String title) {
+        initModality(Modality.APPLICATION_MODAL);
+        initStyle(StageStyle.UTILITY);
+        setTitle(title);
+        sizeToScene();
+        setResizable(false);
     }
 }

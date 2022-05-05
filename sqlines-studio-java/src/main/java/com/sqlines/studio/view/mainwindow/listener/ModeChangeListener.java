@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.view.mainwindow.listener;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A ModeChangeListener is notified whenever the conversion mode in any tab changes.
  */
@@ -30,5 +28,5 @@ public interface ModeChangeListener {
      * @param newMode updated mode
      * @param tabIndex the index of the tab where the conversion mode was changed
      */
-    void changed(@NotNull String newMode, int tabIndex);
+    void changed(String newMode, int tabIndex);
 }

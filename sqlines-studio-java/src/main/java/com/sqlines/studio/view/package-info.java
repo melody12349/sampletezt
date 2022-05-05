@@ -30,7 +30,7 @@
  * <p>
  * Classes:
  * <p>
- * {@link com.sqlines.studio.view.Window} -
+ * {@link com.sqlines.studio.view.AbstractWindow} -
  * the base class of all UI windows. Allows you to set light and
  * dark interface stylesheets and switch between them.
  * <p>

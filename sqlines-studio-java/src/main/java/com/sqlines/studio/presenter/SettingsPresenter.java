@@ -18,7 +18,7 @@ package com.sqlines.studio.presenter;
 
 import com.sqlines.studio.model.license.License;
 import com.sqlines.studio.model.PropertiesLoader;
-import com.sqlines.studio.view.Window;
+import com.sqlines.studio.view.AbstractWindow;
 import com.sqlines.studio.view.mainwindow.MainWindowSettingsView;
 import com.sqlines.studio.view.settings.event.ChangeLicenseEvent;
 import com.sqlines.studio.view.settings.SettingsWindowView;
@@ -47,7 +47,7 @@ public class SettingsPresenter {
     private final License license;
     private final SettingsWindowView settingsWindow;
     private final MainWindowSettingsView mainWindow;
-    private final List<? extends Window> windows;
+    private final List<? extends AbstractWindow> windows;
 
     /**
      * Constructs a new  SettingsPresenter.
@@ -60,7 +60,7 @@ public class SettingsPresenter {
     public SettingsPresenter(@NotNull License license,
                              @NotNull SettingsWindowView settingsWindowView,
                              @NotNull MainWindowSettingsView mainWindowView,
-                             @NotNull List<? extends Window> windows) {
+                             @NotNull List<? extends AbstractWindow> windows) {
         this.license = license;
         this.settingsWindow = settingsWindowView;
         this.mainWindow = mainWindowView;
@@ -78,7 +78,7 @@ public class SettingsPresenter {
         license.addLicenseListener(this::licenseChanged);
 
         mainWindow.setOnPreferencesAction(event -> showSettingsWindow());
-        mainWindow.setOnTabCloseAction(event -> windows.forEach(Window::close));
+        mainWindow.setOnTabCloseAction(event -> windows.forEach(AbstractWindow::close));
 
         settingsWindow.addThemeChangeListener(this::themeChanged);
         settingsWindow.addDirChangeListener(this::workingDirChanged);
@@ -178,11 +178,11 @@ public class SettingsPresenter {
     private void loadTheme() {
         String theme = properties.getProperty("view.theme", "light");
         if (theme.equals("light")) {
-            settingsWindow.selectTheme(Window.Theme.LIGHT);
-            windows.forEach(window -> window.setTheme(Window.Theme.LIGHT));
+            settingsWindow.selectTheme(AbstractWindow.Theme.LIGHT);
+            windows.forEach(window -> window.setTheme(AbstractWindow.Theme.LIGHT));
         } else if (theme.equals("dark")) {
-            settingsWindow.selectTheme(Window.Theme.DARK);
-            windows.forEach(window -> window.setTheme(Window.Theme.DARK));
+            settingsWindow.selectTheme(AbstractWindow.Theme.DARK);
+            windows.forEach(window -> window.setTheme(AbstractWindow.Theme.DARK));
         }
     }
 
@@ -283,11 +283,11 @@ public class SettingsPresenter {
         try {
             if (newTheme.equals("Light")) {
                 properties.setProperty("view.theme", "light");
-                windows.forEach(window -> window.setTheme(Window.Theme.LIGHT));
+                windows.forEach(window -> window.setTheme(AbstractWindow.Theme.LIGHT));
                 logger.info("Theme changed. New theme - light");
             } else if (newTheme.equals("Dark")) {
                 properties.setProperty("view.theme", "dark");
-                windows.forEach(window -> window.setTheme(Window.Theme.DARK));
+                windows.forEach(window -> window.setTheme(AbstractWindow.Theme.DARK));
                 logger.info("Theme changed. New theme - dark");
             }
 

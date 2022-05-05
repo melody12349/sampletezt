@@ -33,8 +33,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Interface through with the presenter / controller can interact with the main window UI.
  * Provides methods for basic work with the main window.
@@ -59,7 +57,7 @@ public interface MainWindowView extends BaseView {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (tabIndex < 0 || tabIndex > the number of opened tabs)
      */
-    @NotNull FieldInFocus getFieldInFocus(int tabIndex);
+    FieldInFocus inFocus(int tabIndex);
 
     /**
      * Sets the specified source conversion mode as current.
@@ -70,7 +68,7 @@ public interface MainWindowView extends BaseView {
      *
      * @throws IllegalArgumentException if such a mode does not exist
      */
-    void setSourceMode(@NotNull String mode);
+    void setSourceMode(String mode);
 
     /**
      * Sets the specified target conversion mode as current.
@@ -81,7 +79,7 @@ public interface MainWindowView extends BaseView {
      *
      * @throws IllegalArgumentException if such a mode does not exist
      */
-    void setTargetMode(@NotNull String mode);
+    void setTargetMode(String mode);
 
     /**
      * Replaces the entire content of the source text input field with the given text.
@@ -94,7 +92,7 @@ public interface MainWindowView extends BaseView {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (tabIndex < 0 || tabIndex > the number of opened tabs)
      */
-    void setSourceText(@NotNull String text, int tabIndex);
+    void setSourceText(String text, int tabIndex);
 
     /**
      * Replaces the entire content of the target text input field with the given text.
@@ -107,7 +105,7 @@ public interface MainWindowView extends BaseView {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (tabIndex < 0 || tabIndex > the number of opened tabs)
      */
-    void setTargetText(@NotNull String text, int tabIndex);
+    void setTargetText(String text, int tabIndex);
 
     /**
      * Sets the tab title to the tab with the specified index.
@@ -120,7 +118,7 @@ public interface MainWindowView extends BaseView {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (tabIndex < 0 || tabIndex > the number of opened tabs)
      */
-    void setTabTitle(@NotNull String title, int tabIndex);
+    void setTabTitle(String title, int tabIndex);
 
     /**
      * Sets the specified tab as current.
@@ -182,7 +180,15 @@ public interface MainWindowView extends BaseView {
      *
      * @param filePath file path to show
      */
-    void showFilePath(@NotNull String filePath);
+    void showFilePath(String filePath);
+
+    /**
+     * Shows a window prompting the user to select files to open.
+     *
+     * @return a list of selected files or {@link Optional#empty()}
+     * if the user did not select any file
+     */
+    Optional<List<File>> choseFilesToOpen();
 
     /**
      * Shows a window prompting the user to select files to open.
@@ -192,7 +198,7 @@ public interface MainWindowView extends BaseView {
      * @return a list of selected files or {@link Optional#empty()}
      * if the user did not select any file
      */
-    @NotNull Optional<List<File>> choseFilesToOpen(Optional<File> initialDir);
+    Optional<List<File>> choseFilesToOpen(File initialDir);
 
     /**
      * Shows a window prompting the user to choose where to save a file.
@@ -200,7 +206,7 @@ public interface MainWindowView extends BaseView {
      * @return a selected file path or {@link Optional#empty()}
      * if the user did not select a file path
      */
-    @NotNull Optional<String> choseFileSavingLocation();
+    Optional<String> choseFileSavingLocation();
 
     /**
      * Adds new recent file path to the Open Recent menu in the menu bar.
@@ -209,7 +215,7 @@ public interface MainWindowView extends BaseView {
      *
      * @throws IllegalArgumentException if file path is empty
      */
-    void addRecentFile(@NotNull String filePath);
+    void addRecentFile(String filePath);
 
     /**
      * Deletes all recent files paths in the Open Recent menu.
@@ -227,7 +233,7 @@ public interface MainWindowView extends BaseView {
      * @param filePath file path to move
      * @param moveTo the index to move the file path to
      */
-    void moveRecentFile(@NotNull String filePath, int moveTo);
+    void moveRecentFile(String filePath, int moveTo);
 
     /**
      * Adds a listener which will be notified when the tab selection changes.
@@ -235,14 +241,14 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addTabSelectionListener(@NotNull ChangeListener<Number> listener);
+    void addTabSelectionListener(ChangeListener<Number> listener);
 
     /**
      * Removes the specified listener.
      *
      * @param listener the listener to remove
      */
-    void removeTabSelectionListener(@NotNull ChangeListener<Number> listener);
+    void removeTabSelectionListener(ChangeListener<Number> listener);
 
     /**
      * Adds a listener which will be notified when the tab title in any tab changes.
@@ -250,14 +256,14 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addTabTitleListener(@NotNull TabTitleChangeListener listener);
+    void addTabTitleListener(TabTitleChangeListener listener);
 
     /**
      * Removes the specified listener.
      *
      * @param listener the listener to remove
      */
-    void removeTabTitleListener(@NotNull TabTitleChangeListener listener);
+    void removeTabTitleListener(TabTitleChangeListener listener);
 
     /**
      * Adds a listener which will be notified when the text in the
@@ -266,14 +272,14 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addSourceTextListener(@NotNull TextChangeListener listener);
+    void addSourceTextListener(TextChangeListener listener);
 
     /**
      * Removes the specified listener.
      *
      * @param listener the listener to remove
      */
-    void removeSourceTextListener(@NotNull TextChangeListener listener);
+    void removeSourceTextListener(TextChangeListener listener);
 
     /**
      * Adds a listener which will be notified when the text in the
@@ -282,14 +288,14 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addTargetTextListener(@NotNull TextChangeListener listener);
+    void addTargetTextListener(TextChangeListener listener);
 
     /**
      * Removes the specified listener.
      *
      * @param listener the listener to remove
      */
-    void removeTargetTextListener(@NotNull TextChangeListener listener);
+    void removeTargetTextListener(TextChangeListener listener);
 
     /**
      * Adds a listener which will be notified when the source mode in any tab changes.
@@ -297,14 +303,14 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addSourceModeListener(@NotNull ModeChangeListener listener);
+    void addSourceModeListener(ModeChangeListener listener);
 
     /**
      * Removes the specified listener.
      *
      * @param listener the listener to remove
      */
-    void removeSourceModeListener(@NotNull ModeChangeListener listener);
+    void removeSourceModeListener(ModeChangeListener listener);
 
     /**
      * Adds a listener which will be notified when the target mode in any tab changes.
@@ -312,14 +318,14 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addTargetModeListener(@NotNull ModeChangeListener listener);
+    void addTargetModeListener(ModeChangeListener listener);
 
     /**
      * Removes the specified listener.
      *
      * @param listener the listener to remove
      */
-    void removeTargetModeListener(@NotNull ModeChangeListener listener);
+    void removeTargetModeListener(ModeChangeListener listener);
 
     /**
      * Adds a listener which will be notified when the focused field in any tab changes.
@@ -327,21 +333,21 @@ public interface MainWindowView extends BaseView {
      *
      * @param listener the listener to register
      */
-    void addFocusListener(@NotNull FocusChangeListener listener);
+    void addFocusListener(FocusChangeListener listener);
 
     /**
      * Sets the action which is invoked when the file is dragged over the main window.
      *
      * @param action the action to register
      */
-    void setOnDragAction(@NotNull EventHandler<DragEvent> action);
+    void setOnDragAction(EventHandler<DragEvent> action);
 
     /**
      * Sets the action which is invoked when the file is dropped in the main window.
      *
      * @param action the action to register
      */
-    void setOnDropAction(@NotNull EventHandler<DragEvent> action);
+    void setOnDropAction(EventHandler<DragEvent> action);
 
     /**
      * Sets the action which is invoked whenever the New Tab menu item
@@ -349,7 +355,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnNewTabAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnNewTabAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked whenever the Close Tab menu item
@@ -357,7 +363,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnCloseTabAction(@NotNull EventHandler<TabCloseEvent> action);
+    void setOnCloseTabAction(EventHandler<TabCloseEvent> action);
 
     /**
      * Sets the action which is invoked whenever the Open File menu item
@@ -365,7 +371,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnOpenFileAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnOpenFileAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when
@@ -373,7 +379,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnRecentFileAction(@NotNull EventHandler<RecentFileEvent> action);
+    void setOnRecentFileAction(EventHandler<RecentFileEvent> action);
 
     /**
      * Sets the action which is invoked when the Clear menu item
@@ -381,7 +387,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnClearRecentAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnClearRecentAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked whenever the Save File menu item
@@ -389,7 +395,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnSaveFileAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnSaveFileAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when
@@ -397,7 +403,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnSaveAsAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnSaveAsAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked whenever the Run Conversion menu item
@@ -405,7 +411,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnRunAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnRunAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when
@@ -413,7 +419,7 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnOnlineHelpAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnOnlineHelpAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when
@@ -421,5 +427,5 @@ public interface MainWindowView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnOpenSiteAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnOpenSiteAction(EventHandler<ActionEvent> action);
 }

@@ -21,15 +21,13 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * The base class of all UI windows.
  * Allows you to set light and dark interface stylesheets and switch between them.
  *
- * @apiNote Use {@link Window#setRoot(Parent)} to set main layout before using {@link Window} methods.
+ * @apiNote Use {@link AbstractWindow#setRoot(Parent)} to set main layout before using AbstractWindow methods.
  */
-public abstract class Window extends Stage {
+public abstract class AbstractWindow extends Stage {
 
     /**
      * UI theme.
@@ -44,7 +42,7 @@ public abstract class Window extends Stage {
     /**
      * @return current UI theme
      */
-    public final @NotNull Theme getTheme() {
+    public final Theme getTheme() {
         return theme;
     }
 
@@ -53,7 +51,7 @@ public abstract class Window extends Stage {
      *
      * @throws IllegalStateException if light stylesheets have not been set
      */
-    public final @NotNull String getLightStylesheets() {
+    public final String getLightStylesheets() {
         if (lightStylesheets == null) {
             throw new IllegalStateException("Light styles not set");
         }
@@ -66,7 +64,7 @@ public abstract class Window extends Stage {
      *
      * @throws IllegalStateException if dark stylesheets have not been set
      */
-    public final @NotNull String getDarkStylesheets() {
+    public final String getDarkStylesheets() {
         if (darkStylesheets == null) {
             throw new IllegalStateException("Dark styles not set");
         }
@@ -82,7 +80,7 @@ public abstract class Window extends Stage {
      *
      * @param filePath path to a file with stylesheets to set
      */
-    public final void setLightStylesheets(@NotNull String filePath) {
+    public final void setLightStylesheets(String filePath) {
         lightStylesheets = filePath;
     }
 
@@ -94,7 +92,7 @@ public abstract class Window extends Stage {
      *
      * @param filePath path to a file with stylesheets to set
      */
-    public final void setDarkStylesheets(@NotNull String filePath) {
+    public final void setDarkStylesheets(String filePath) {
         darkStylesheets = filePath;
     }
 
@@ -105,31 +103,45 @@ public abstract class Window extends Stage {
      *
      * @throws IllegalStateException if stylesheets or root node have not been set
      */
-    public final void setTheme(@NotNull Theme theme) {
+    public final void setTheme(Theme theme) {
         if (scene == null) {
             throw new IllegalStateException("Root node not set");
         }
 
-        ObservableList<String> stylesheets = scene.getStylesheets();
         if (theme == Theme.LIGHT) {
-            if (lightStylesheets == null) {
-                throw new IllegalStateException("Light styles not set");
-            }
-
-            stylesheets.clear();
-            stylesheets.add(lightStylesheets);
-            this.theme = Theme.LIGHT;
+            setLightTheme();
         } else if (theme == Theme.DARK) {
-            if (darkStylesheets == null) {
-                throw new IllegalStateException("Dark styles not set");
-            }
-
-            stylesheets.clear();
-            stylesheets.add(darkStylesheets);
-            this.theme = Theme.DARK;
+            setDarkTheme();
         } else if (theme == Theme.NONE) {
-            stylesheets.clear();
+            clearTheme();
         }
+    }
+
+    private void setLightTheme() {
+        ObservableList<String> stylesheets = scene.getStylesheets();
+        if (lightStylesheets == null) {
+            throw new IllegalStateException("Light styles not set");
+        }
+
+        stylesheets.clear();
+        stylesheets.add(lightStylesheets);
+        this.theme = Theme.LIGHT;
+    }
+
+    private void setDarkTheme() {
+        ObservableList<String> stylesheets = scene.getStylesheets();
+        if (darkStylesheets == null) {
+            throw new IllegalStateException("Dark styles not set");
+        }
+
+        stylesheets.clear();
+        stylesheets.add(darkStylesheets);
+        this.theme = Theme.DARK;
+    }
+
+    private void clearTheme() {
+        ObservableList<String> stylesheets = scene.getStylesheets();
+        stylesheets.clear();
     }
 
     /**
@@ -137,7 +149,7 @@ public abstract class Window extends Stage {
      *
      * @param node root node to set
      */
-    protected final void setRoot(@NotNull Parent node) {
+    protected final void setRoot(Parent node) {
         scene = new Scene(node);
         scene.setRoot(node);
         setScene(scene);

@@ -19,8 +19,6 @@ package com.sqlines.studio.view.mainwindow.event;
 import javafx.event.Event;
 import javafx.event.EventType;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * An event representing a click on a recent file in the Open Recent menu in the menu bar.
  */
@@ -35,7 +33,7 @@ public class RecentFileEvent extends Event {
      *
      * @param filePath path to the recent file
      */
-    public RecentFileEvent(@NotNull String filePath) {
+    public RecentFileEvent(String filePath) {
         super(CLICKED);
         this.filePath = filePath;
     }
@@ -43,7 +41,7 @@ public class RecentFileEvent extends Event {
     /**
      * @return path to the recent file
      */
-    public @NotNull String getFilePath() {
+    public String getFilePath() {
         return filePath;
     }
 }

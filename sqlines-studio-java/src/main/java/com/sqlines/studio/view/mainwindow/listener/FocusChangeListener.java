@@ -17,7 +17,6 @@
 package com.sqlines.studio.view.mainwindow.listener;
 
 import com.sqlines.studio.view.mainwindow.MainWindowView;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A FocusChangeListener is notified whenever the currently focused
@@ -32,5 +31,5 @@ public interface FocusChangeListener {
      * @param newField currently focused text input field
      * @param tabIndex the index of the tab where the focused field changed.
      */
-    void changed(@NotNull MainWindowView.FieldInFocus newField, int tabIndex);
+    void changed(MainWindowView.FieldInFocus newField, int tabIndex);
 }

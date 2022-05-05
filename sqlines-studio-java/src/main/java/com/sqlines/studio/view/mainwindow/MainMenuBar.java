@@ -32,8 +32,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 
-import org.jetbrains.annotations.NotNull;
-
+import java.util.Collection;
 
 /**
  * Drop down menus at the top of the application window.
@@ -92,16 +91,7 @@ class MainMenuBar extends MenuBar {
     private final MenuItem openSiteMenuItem = new MenuItem();
 
     public MainMenuBar() {
-        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            useSystemMenuBarProperty().set(true);
-
-            MenuToolkit toolkit = MenuToolkit.toolkit();
-            Menu defaultMenu = toolkit.createDefaultApplicationMenu("SQLines Studio");
-            makeMainMenu(defaultMenu);
-            toolkit.setApplicationMenu(defaultMenu);
-            toolkit.setMenuBar(this);
-        }
-
+        makeMainMenu();
         makeFileMenu();
         makeEditMenu();
         makeViewMenu();
@@ -109,16 +99,43 @@ class MainMenuBar extends MenuBar {
         makeHelpMenu();
     }
 
-    private void makeMainMenu(@NotNull Menu defaultMenu) {
+    private void makeMainMenu() {
+        boolean osIsMac = System.getProperty("os.name").toLowerCase().startsWith("mac");
+        if (osIsMac) {
+            setUpMainMenuItems();
+            makeMacOsMainMenu();
+        }
+    }
+
+    private void setUpMainMenuItems() {
         aboutMenuItem.setText("About SQLines Studio...");
         preferencesMenuItem.setText("Preferences...");
+    }
+
+    private void makeMacOsMainMenu() {
+        useSystemMenuBarProperty().set(true);
+        MenuToolkit toolkit = MenuToolkit.toolkit();
+        Menu defaultMenu = toolkit.createDefaultApplicationMenu("SQLines Studio");
 
         defaultMenu.getItems().set(0, aboutMenuItem);
         defaultMenu.getItems().set(1, preferencesMenuItem);
         defaultMenu.getItems().add(2, new SeparatorMenuItem());
+
+        toolkit.setApplicationMenu(defaultMenu);
+        toolkit.setMenuBar(this);
     }
 
     private void makeFileMenu() {
+        setUpFileMenuItems();
+        Menu fileMenu = new Menu("File");
+        fileMenu.getItems().addAll(newTabMenuItem, closeTabMenuItem, nextTabMenuItem,
+                prevTabMenuItem, new SeparatorMenuItem(), openFileMenuItem, openRecentMenu,
+                saveFileMenuItem, saveFileAsMenuItem);
+
+        getMenus().add(fileMenu);
+    }
+
+    private void setUpFileMenuItems() {
         newTabMenuItem.setText("New Tab");
         newTabMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN));
 
@@ -147,23 +164,10 @@ class MainMenuBar extends MenuBar {
         saveFileAsMenuItem.setAccelerator(
                 new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN)
         );
-
-        Menu fileMenu = new Menu("File");
-        fileMenu.getItems().addAll(newTabMenuItem, closeTabMenuItem, nextTabMenuItem,
-                prevTabMenuItem, new SeparatorMenuItem(), openFileMenuItem, openRecentMenu,
-                saveFileMenuItem, saveFileAsMenuItem);
-
-        getMenus().add(fileMenu);
     }
 
     private void makeEditMenu() {
-        undoMenuItem.setText("Undo");
-        redoMenuItem.setText("Redo");
-        selectAllMenuItem.setText("Select All");
-        cutMenuItem.setText("Cut");
-        copyMenuItem.setText("Copy");
-        pasteMenuItem.setText("Paste");
-
+        setUpEditMenuItems();
         Menu editMenu = new Menu("Edit");
         editMenu.getItems().addAll(undoMenuItem, redoMenuItem, new SeparatorMenuItem(),
                 selectAllMenuItem, cutMenuItem, copyMenuItem, pasteMenuItem);
@@ -171,7 +175,28 @@ class MainMenuBar extends MenuBar {
         getMenus().add(editMenu);
     }
 
+    private void setUpEditMenuItems() {
+        undoMenuItem.setText("Undo");
+        redoMenuItem.setText("Redo");
+        selectAllMenuItem.setText("Select All");
+        cutMenuItem.setText("Cut");
+        copyMenuItem.setText("Copy");
+        pasteMenuItem.setText("Paste");
+    }
+
     private void makeViewMenu() {
+        setUpViewMenuItems();
+
+        Menu editorMenu = new Menu("Editor");
+        editorMenu.getItems().addAll(wrappingMenuItem, highlighterMenuItem, lineNumbersMenuItem);
+        Menu viewMenu = new Menu("View");
+        viewMenu.getItems().addAll(zoomInMenuItem, zoomOutMenuItem, new SeparatorMenuItem(),
+                statusBarMenuItem, targetFieldMenuItem, new SeparatorMenuItem(), editorMenu);
+
+        getMenus().add(viewMenu);
+    }
+
+    private void setUpViewMenuItems() {
         zoomInMenuItem.setText("Zoom In");
         zoomInMenuItem.setAccelerator(
                 new KeyCodeCombination(KeyCode.A, KeyCombination.SHIFT_DOWN, KeyCombination.SHORTCUT_DOWN)
@@ -187,23 +212,14 @@ class MainMenuBar extends MenuBar {
         wrappingMenuItem.setText("Wrap Lines To Editor Width");
         highlighterMenuItem.setText("Highlighter");
         lineNumbersMenuItem.setText("Line Numbers");
-
-        Menu editorMenu = new Menu("Editor");
-        editorMenu.getItems().addAll(wrappingMenuItem, highlighterMenuItem, lineNumbersMenuItem);
-
-        Menu viewMenu = new Menu("View");
-        viewMenu.getItems().addAll(zoomInMenuItem, zoomOutMenuItem, new SeparatorMenuItem(),
-                statusBarMenuItem, targetFieldMenuItem, new SeparatorMenuItem(), editorMenu);
-
-        getMenus().add(viewMenu);
     }
 
     private void makeToolsMenu() {
-        runMenuItem.setText("Run Conversion");
-        runMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN));
+        setUpToolsMenuItems();
 
         Menu toolsMenu = new Menu("Tools");
-        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
+        boolean osIsWin = System.getProperty("os.name").toLowerCase().startsWith("win");
+        if (osIsWin) {
             preferencesMenuItem.setText("Settings");
             toolsMenu.getItems().addAll(preferencesMenuItem, new SeparatorMenuItem());
         }
@@ -212,14 +228,22 @@ class MainMenuBar extends MenuBar {
         getMenus().add(toolsMenu);
     }
 
-    private void makeHelpMenu() {
-        onlineHelpMenuItem.setText("Online Help...");
-        openSiteMenuItem.setText("Official Site...");
+    private void setUpToolsMenuItems() {
+        runMenuItem.setText("Run Conversion");
+        runMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN));
+    }
 
+    private void makeHelpMenu() {
+        setUpHelpMenuItems();
         Menu helpMenu = new Menu("Help");
         helpMenu.getItems().addAll(onlineHelpMenuItem, openSiteMenuItem);
 
         getMenus().add(helpMenu);
+    }
+
+    private void setUpHelpMenuItems() {
+        onlineHelpMenuItem.setText("Online Help...");
+        openSiteMenuItem.setText("Official Site...");
     }
 
     /**
@@ -229,21 +253,23 @@ class MainMenuBar extends MenuBar {
      *
      * @throws IllegalArgumentException if file path is empty
      */
-    public void addRecentFile(@NotNull String filePath) {
+    public void addRecentFile(String filePath) {
         if (filePath.isEmpty()) {
             throw new IllegalArgumentException("File path is empty");
         }
 
         MenuItem newFile = new MenuItem(filePath);
-        newFile.setOnAction(event -> {
-            RecentFileEvent recentFileEvent = new RecentFileEvent(filePath);
-            fireEvent(recentFileEvent);
-            if (recentFileEventHandler != null) {
-                recentFileEventHandler.handle(recentFileEvent);
-            }
-        });
+        newFile.setOnAction(event -> setUpRecentFileEventHandler(newFile));
 
         openRecentMenu.getItems().add(0, newFile);
+    }
+
+    private void setUpRecentFileEventHandler(MenuItem item) {
+        RecentFileEvent recentFileEvent = new RecentFileEvent(item.getText());
+        fireEvent(recentFileEvent);
+        if (recentFileEventHandler != null) {
+            recentFileEventHandler.handle(recentFileEvent);
+        }
     }
 
     /**
@@ -264,29 +290,28 @@ class MainMenuBar extends MenuBar {
      * (moveTo < 0 || moveTo >= the number of recent file paths)
      * @throws IllegalArgumentException if no such recent file path exists
      */
-    public void moveRecentFile(@NotNull String filePath, int moveTo) {
-        ObservableList<MenuItem> items = openRecentMenu.getItems();
-        if (moveTo < 0 || moveTo >= items.size()) {
-            int endInd = (items.size() == 0) ? 0 : items.size() - 1;
-            String errorMsg = "Index is out of range: (0:" + endInd + ") expected, "
-                    + moveTo + " provided";
+    public void moveRecentFile(String filePath, int moveTo) {
+        ObservableList<MenuItem> files = openRecentMenu.getItems();
+        checkBounds(moveTo, 0, files.size());
+
+        MenuItem recentFile = findRecentFile(files, filePath);
+        files.remove(recentFile);
+        files.add(moveTo, recentFile);
+    }
+
+    private void checkBounds(int moveTo, int boundFrom, int boundTo) {
+        if (moveTo < boundFrom || moveTo >= boundTo) {
+            String errorMsg = "Index is out of range: " + "(" + boundFrom + ":" + boundTo +
+                    ") expected, " + moveTo + " provided";
             throw new IndexOutOfBoundsException(errorMsg);
         }
+    }
 
-        MenuItem item = null;
-        for (MenuItem menuItem : items) {
-            if (menuItem.getText().equals(filePath)) {
-                item = menuItem;
-                break;
-            }
-        }
-
-        if (item == null) {
-            throw new IllegalArgumentException("No such recent file exists: " + filePath);
-        }
-
-        items.remove(item);
-        items.add(moveTo, item);
+    private MenuItem findRecentFile(Collection<MenuItem> files, String title) {
+        return files.stream()
+                .filter(menuItem -> menuItem.getText().equals(title))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No such recent file exists: " + title));
     }
 
     /**
@@ -394,7 +419,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnAboutAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnAboutAction(EventHandler<ActionEvent> action) {
         aboutMenuItem.setOnAction(action);
     }
 
@@ -403,7 +428,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnPreferencesAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnPreferencesAction(EventHandler<ActionEvent> action) {
         preferencesMenuItem.setOnAction(action);
     }
 
@@ -412,7 +437,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnNewTabAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnNewTabAction(EventHandler<ActionEvent> action) {
         newTabMenuItem.setOnAction(action);
     }
 
@@ -421,7 +446,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnCloseTabAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnCloseTabAction(EventHandler<ActionEvent> action) {
         closeTabMenuItem.setOnAction(action);
     }
 
@@ -430,7 +455,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnNextTabAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnNextTabAction(EventHandler<ActionEvent> action) {
         nextTabMenuItem.setOnAction(action);
     }
 
@@ -439,7 +464,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnPrevTabAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnPrevTabAction(EventHandler<ActionEvent> action) {
         prevTabMenuItem.setOnAction(action);
     }
 
@@ -448,7 +473,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnOpenFileAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnOpenFileAction(EventHandler<ActionEvent> action) {
         openFileMenuItem.setOnAction(action);
     }
 
@@ -458,7 +483,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnOpenRecentAction(@NotNull EventHandler<RecentFileEvent> action) {
+    public void setOnOpenRecentAction(EventHandler<RecentFileEvent> action) {
         recentFileEventHandler = action;
     }
 
@@ -468,7 +493,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnClearRecentAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnClearRecentAction(EventHandler<ActionEvent> action) {
         clearRecentMenuItem.setOnAction(action);
     }
 
@@ -477,7 +502,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnSaveFileAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSaveFileAction(EventHandler<ActionEvent> action) {
         saveFileMenuItem.setOnAction(action);
     }
 
@@ -486,7 +511,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnSaveAsAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSaveAsAction(EventHandler<ActionEvent> action) {
         saveFileAsMenuItem.setOnAction(action);
     }
 
@@ -495,7 +520,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnUndoAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnUndoAction(EventHandler<ActionEvent> action) {
         undoMenuItem.setOnAction(action);
     }
 
@@ -504,7 +529,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnRedoAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnRedoAction(EventHandler<ActionEvent> action) {
         redoMenuItem.setOnAction(action);
     }
 
@@ -513,7 +538,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnSelectAllAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSelectAllAction(EventHandler<ActionEvent> action) {
         selectAllMenuItem.setOnAction(action);
     }
 
@@ -522,7 +547,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnCutAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnCutAction(EventHandler<ActionEvent> action) {
         cutMenuItem.setOnAction(action);
     }
 
@@ -531,7 +556,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnCopyAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnCopyAction(EventHandler<ActionEvent> action) {
         copyMenuItem.setOnAction(action);
     }
 
@@ -540,7 +565,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnPasteAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnPasteAction(EventHandler<ActionEvent> action) {
         pasteMenuItem.setOnAction(action);
     }
 
@@ -549,7 +574,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnZoomInAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnZoomInAction(EventHandler<ActionEvent> action) {
         zoomInMenuItem.setOnAction(action);
     }
 
@@ -558,7 +583,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnZoomOutAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnZoomOutAction(EventHandler<ActionEvent> action) {
         zoomOutMenuItem.setOnAction(action);
     }
 
@@ -568,7 +593,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnStatusBarAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnStatusBarAction(EventHandler<ActionEvent> action) {
         statusBarMenuItem.setOnAction(action);
     }
 
@@ -578,7 +603,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnTargetFieldAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnTargetFieldAction(EventHandler<ActionEvent> action) {
         targetFieldMenuItem.setOnAction(action);
     }
 
@@ -588,7 +613,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnWrappingAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnWrappingAction(EventHandler<ActionEvent> action) {
         wrappingMenuItem.setOnAction(action);
     }
 
@@ -598,7 +623,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnHighlighterAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnHighlighterAction(EventHandler<ActionEvent> action) {
         highlighterMenuItem.setOnAction(action);
     }
 
@@ -608,7 +633,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnLineNumbersAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnLineNumbersAction(EventHandler<ActionEvent> action) {
         lineNumbersMenuItem.setOnAction(action);
     }
 
@@ -617,7 +642,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnRunAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnRunAction(EventHandler<ActionEvent> action) {
         runMenuItem.setOnAction(action);
     }
 
@@ -626,7 +651,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnOnlineHelpAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnOnlineHelpAction(EventHandler<ActionEvent> action) {
         onlineHelpMenuItem.setOnAction(action);
     }
 
@@ -635,7 +660,7 @@ class MainMenuBar extends MenuBar {
      *
      * @param action the action to register
      */
-    public void setOnOpenSiteAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnOpenSiteAction(EventHandler<ActionEvent> action) {
         openSiteMenuItem.setOnAction(action);
     }
 }

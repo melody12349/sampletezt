@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.view.mainwindow.listener;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A TextChangeListener is notified whenever the text
  * in the text input field in any tab changes.
@@ -31,5 +29,5 @@ public interface TextChangeListener {
      * @param newText updated text
      * @param tabIndex the index of the tab where the text was changed
      */
-    void changed(@NotNull String newText, int tabIndex);
+    void changed(String newText, int tabIndex);
 }

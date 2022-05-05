@@ -32,13 +32,13 @@ public class CoreProcess {
     private String output = "";
 
     /**
-     * Starts a new process with 1 command-line argument - log file path.
+     * Starts a new process with the specified command-line arguments.
      * Causes the current thread to wait, if necessary, until the process has terminated.
      * <p>
      * The program path is taken from the {@link java.util.Properties}.
      * Key - model.process-dir.
      *
-     * @param logFilePath command-line argument to set. Log file path
+     * @param args command-line arguments to set
      *
      * @throws IllegalStateException if the sqlines program was not found
      * @throws IOException if an I/O error occurs
@@ -49,9 +49,7 @@ public class CoreProcess {
      * subprocess was redirected to a file and the security manager's checkWrite method
      * denies write access to the file
      */
-    public void runAndWait(@NotNull String logFilePath) throws IOException {
-        String[] args = { getProcessPath(),
-                          "-log=" + logFilePath };
+    public void runWithArgsAndWait(@NotNull String[] args) throws IOException {
         runAndWait(args);
     }
 

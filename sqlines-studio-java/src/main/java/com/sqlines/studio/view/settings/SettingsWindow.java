@@ -17,7 +17,7 @@
 package com.sqlines.studio.view.settings;
 
 import com.sqlines.studio.view.ErrorWindow;
-import com.sqlines.studio.view.Window;
+import com.sqlines.studio.view.AbstractWindow;
 import com.sqlines.studio.view.settings.event.ChangeLicenseEvent;
 
 import javafx.beans.value.ChangeListener;
@@ -41,12 +41,10 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * The concrete setting window.
  */
-public class SettingsWindow extends Window implements SettingsWindowView {
+public class SettingsWindow extends AbstractWindow implements SettingsWindowView {
     private EventHandler<ChangeLicenseEvent> licenseEventHandler;
 
     // General settings
@@ -70,42 +68,64 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     private final Button changeButton = new Button();
 
     public SettingsWindow() {
+        setUpScene();
+        setUpWindow();
+    }
+
+    private void setUpScene() {
         TabPane tabPane = new TabPane();
         setRoot(tabPane);
+        setUpTabPane(tabPane);
+    }
+
+    private void setUpTabPane(TabPane tabPane) {
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabPane.getSelectionModel().selectedIndexProperty().addListener(this::tabIndexChanged);
+
         tabPane.getTabs().add(new Tab("General", makeGeneralTab()));
         tabPane.getTabs().add(new Tab("Appearance", makeAppearanceTab()));
         tabPane.getTabs().add(new Tab("License", makeLicenseTab()));
-
-        initStyle(StageStyle.UTILITY);
-        setTitle("Preferences");
-        setWidth(320);
-        setHeight(210);
-        setResizable(false);
     }
 
-    private void tabIndexChanged(@NotNull ObservableValue<? extends Number> observable,
-                                 @NotNull Number oldIndex,
-                                 @NotNull Number newIndex) {
+    private void tabIndexChanged(ObservableValue<? extends Number> observable,
+                                 Number oldIndex, Number newIndex) {
         int tabIndex = newIndex.intValue();
         if (tabIndex == 0) { // General settings tab
-            setWidth(320);
-            setHeight(210);
+            setGeneralTabSize();
         } else if (tabIndex == 1) { // Editor settings tab
-            setWidth(320);
-            setHeight(240);
+            setEditorTabSize();
         } else if (tabIndex == 2) { // License settings tab
-            setWidth(320);
-            setHeight(220);
+            setLicenseTabSize();
         }
     }
 
-    private @NotNull VBox makeGeneralTab() {
+    private void setGeneralTabSize() {
+        setWidth(320);
+        setHeight(210);
+    }
+
+    private void setEditorTabSize() {
+        setWidth(320);
+        setHeight(240);
+    }
+
+    private void setLicenseTabSize() {
+        setWidth(320);
+        setHeight(220);
+    }
+
+    private VBox makeGeneralTab() {
+        setUpGeneralTabItems();
+        return createGeneralTabLayout();
+    }
+
+    private void setUpGeneralTabItems() {
         addDirButton.setText("Add new");
         saveSessionButton.setText("Save last session");
         setDefaultsButton.setText("Set defaults");
+    }
 
+    private VBox createGeneralTabLayout() {
         GridPane topLayout = new GridPane();
         topLayout.setHgap(10);
         topLayout.setVgap(10);
@@ -120,13 +140,20 @@ public class SettingsWindow extends Window implements SettingsWindowView {
         return mainLayout;
     }
 
-    private @NotNull VBox makeAppearanceTab() {
+    private VBox makeAppearanceTab() {
+        setUpAppearanceTabItems();
+        return createAppearanceTabLayout();
+    }
+
+    private void setUpAppearanceTabItems() {
         statusBarButton.setText("Status bar");
         targetFieldButton.setText("Always show target field");
         wrappingButton.setText("Wrap lines to editor width");
         highlighterButton.setText("Highlighter");
         lineNumbersButton.setText("Line numbers");
+    }
 
+    private VBox createAppearanceTabLayout() {
         GridPane topLayout = new GridPane();
         topLayout.setVgap(10);
         topLayout.setHgap(10);
@@ -141,21 +168,31 @@ public class SettingsWindow extends Window implements SettingsWindowView {
         return mainLayout;
     }
 
-    private @NotNull VBox makeLicenseTab() {
+    private VBox makeLicenseTab() {
+        setUpLicenseTabItems();
+        return createLicenseTabLayout();
+    }
+
+    private void setUpLicenseTabItems() {
         regNameField.setPromptText("Enter registration name");
         regNumberField.setPromptText("Enter registration number");
-
         changeButton.setText("Commit change");
-        changeButton.setOnAction(event -> {
-            ChangeLicenseEvent clickedEvent = new ChangeLicenseEvent(
-                    regNameField.getText(), regNumberField.getText()
-            );
-            changeButton.fireEvent(clickedEvent);
-            if (licenseEventHandler != null) {
-                licenseEventHandler.handle(clickedEvent);
-            }
-        });
 
+        changeButton.setOnAction(event -> handleLicenceChangeEvent());
+    }
+
+    private void handleLicenceChangeEvent() {
+        ChangeLicenseEvent clickedEvent = new ChangeLicenseEvent(
+                regNameField.getText(), regNumberField.getText()
+        );
+        changeButton.fireEvent(clickedEvent);
+
+        if (licenseEventHandler != null) {
+            licenseEventHandler.handle(clickedEvent);
+        }
+    }
+
+    private VBox createLicenseTabLayout() {
         VBox topLayout = new VBox(licenseInfo);
         topLayout.setPadding(new Insets(10, 0, 5, 0));
 
@@ -167,33 +204,42 @@ public class SettingsWindow extends Window implements SettingsWindowView {
         return mainLayout;
     }
 
-    @Override
-    public void showError(@NotNull String cause, @NotNull String errorMsg) {
-        ErrorWindow errorWindow = new ErrorWindow(cause, errorMsg);
-        if (getTheme() == Theme.LIGHT) {
-            errorWindow.setLightStylesheets(getLightStylesheets());
-            errorWindow.setTheme(Theme.LIGHT);
-        } else if (getTheme() == Theme.DARK) {
-            errorWindow.setDarkStylesheets(getDarkStylesheets());
-            errorWindow.setTheme(Theme.DARK);
-        }
+    private void setUpWindow() {
+        initStyle(StageStyle.UTILITY);
+        setTitle("Preferences");
+        setWidth(320);
+        setHeight(210);
+        setResizable(false);
+    }
 
+    @Override
+    public void showError(String cause, String errorMsg) {
+        ErrorWindow errorWindow = new ErrorWindow(cause, errorMsg);
+        setStylesheets(errorWindow);
         errorWindow.show();
     }
 
-    @Override
-    public @NotNull Optional<String> choseDirectoryToAdd() {
-        DirectoryChooser chooser = new DirectoryChooser();
-        File dir = chooser.showDialog(this);
-        if (dir != null) {
-            return Optional.of(dir.getAbsolutePath());
-        } else {
-            return Optional.empty();
+    private void setStylesheets(AbstractWindow window) {
+        Theme theme = getTheme();
+        if (theme == Theme.LIGHT) {
+            window.setLightStylesheets(getLightStylesheets());
+        } else if (theme == Theme.DARK) {
+            window.setDarkStylesheets(getDarkStylesheets());
         }
+
+        window.setTheme(theme);
     }
 
     @Override
-    public void addDirectory(@NotNull String dir) {
+    public Optional<String> choseDirectoryToAdd() {
+        DirectoryChooser chooser = new DirectoryChooser();
+        File dir = chooser.showDialog(this);
+        return Optional.ofNullable(dir)
+                .map(File::getAbsolutePath);
+    }
+
+    @Override
+    public void addDirectory(String dir) {
         if (dir.isEmpty()) {
             throw new IllegalArgumentException("Working directory is empty");
         }
@@ -202,7 +248,7 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     }
 
     @Override
-    public final void setWorkingDirectories(@NotNull List<String> dirs) {
+    public final void setWorkingDirectories(List<String> dirs) {
         if (dirs.isEmpty()) {
             throw new IllegalArgumentException("List of working directories is empty");
         }
@@ -213,7 +259,7 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     }
 
     @Override
-    public final void setThemes(@NotNull List<String> themes) {
+    public final void setThemes(List<String> themes) {
         if (themes.isEmpty()) {
             throw new IllegalArgumentException("List of themes is empty");
         }
@@ -223,7 +269,7 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     }
 
     @Override
-    public void selectDirectory(@NotNull String dir) {
+    public void selectDirectory(String dir) {
         if (!dirsBox.getItems().contains(dir)) {
             throw new IllegalArgumentException("Such a directory does not exist: " + dir);
         }
@@ -232,7 +278,7 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     }
 
     @Override
-    public void selectTheme(@NotNull Theme theme) {
+    public void selectTheme(Theme theme) {
         if (theme == Theme.LIGHT) {
             themesBox.getSelectionModel().select(0);
         } else if (theme == Theme.DARK) {
@@ -241,7 +287,7 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     }
 
     @Override
-    public void setLicenseInfo(@NotNull String info) {
+    public void setLicenseInfo(String info) {
         licenseInfo.setText(info);
     }
 
@@ -276,57 +322,57 @@ public class SettingsWindow extends Window implements SettingsWindowView {
     }
 
     @Override
-    public void addThemeChangeListener(@NotNull ChangeListener<String> listener) {
+    public void addThemeChangeListener(ChangeListener<String> listener) {
         themesBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
     @Override
-    public void addDirChangeListener(@NotNull ChangeListener<String> listener) {
+    public void addDirChangeListener(ChangeListener<String> listener) {
         dirsBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
     @Override
-    public void setOnAddDirAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnAddDirAction(EventHandler<ActionEvent> action) {
         addDirButton.setOnAction(action);
     }
 
     @Override
-    public void setOnSaveSessionAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSaveSessionAction(EventHandler<ActionEvent> action) {
         saveSessionButton.setOnAction(action);
     }
 
     @Override
-    public void setOnSetDefaultsAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSetDefaultsAction(EventHandler<ActionEvent> action) {
         setDefaultsButton.setOnAction(action);
     }
 
     @Override
-    public void setOnStatusBarAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnStatusBarAction(EventHandler<ActionEvent> action) {
         statusBarButton.setOnAction(action);
     }
 
     @Override
-    public void setOnTargetFieldAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnTargetFieldAction(EventHandler<ActionEvent> action) {
         targetFieldButton.setOnAction(action);
     }
 
     @Override
-    public void setOnWrappingAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnWrappingAction(EventHandler<ActionEvent> action) {
         wrappingButton.setOnAction(action);
     }
 
     @Override
-    public void setOnHighlighterAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnHighlighterAction(EventHandler<ActionEvent> action) {
         highlighterButton.setOnAction(action);
     }
 
     @Override
-    public void setOnLineNumbersAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnLineNumbersAction(EventHandler<ActionEvent> action) {
         lineNumbersButton.setOnAction(action);
     }
 
     @Override
-    public void setOnChangeLicenseAction(@NotNull EventHandler<ChangeLicenseEvent> action) {
+    public void setOnChangeLicenseAction(EventHandler<ChangeLicenseEvent> action) {
         licenseEventHandler = action;
     }
 }

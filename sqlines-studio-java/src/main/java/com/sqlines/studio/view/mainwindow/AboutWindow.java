@@ -16,10 +16,12 @@
 
 package com.sqlines.studio.view.mainwindow;
 
-import com.sqlines.studio.view.Window;
+import com.sqlines.studio.view.AbstractWindow;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
@@ -29,12 +31,10 @@ import javafx.stage.StageStyle;
 
 import java.net.URL;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Provides a window with information about the application.
  */
-class AboutWindow extends Window {
+class AboutWindow extends AbstractWindow {
 
     /**
      * Constructs a new AboutWindow.
@@ -42,26 +42,37 @@ class AboutWindow extends Window {
      * @throws IllegalStateException if SQLines Studio logo icon was not found in application resources
      */
     public AboutWindow() {
-        setRoot(makeCentralNode());
-        initModality(Modality.APPLICATION_MODAL);
-        initStyle(StageStyle.UTILITY);
-        setTitle("About SQLines Studio");
-        setHeight(240);
-        setWidth(230);
-        setResizable(false);
+        setUpScene();
+        setUpWindow();
     }
 
-    private @NotNull VBox makeCentralNode() {
+    private void setUpScene() {
+        ImageView logoImg = createLogoImage();
+        Parent appInfo = createAppInfo();
+        Parent layout = createMainLayout(logoImg, appInfo);
+        setRoot(layout);
+    }
+
+    private ImageView createLogoImage() {
+        String logoUrl = loadLogoIcon().toExternalForm();
+        ImageView logoImg = new ImageView(new Image(logoUrl));
+        logoImg.setFitHeight(115);
+        logoImg.setFitWidth(110);
+
+        return logoImg;
+    }
+
+    private URL loadLogoIcon() {
         URL iconUrl = getClass().getResource("/icons/logo.png");
         if (iconUrl == null) {
             String errorMsg = "File not found in application resources: icons/logo.png";
             throw new IllegalStateException(errorMsg);
         }
 
-        ImageView logoImg = new ImageView(new Image(iconUrl.toExternalForm()));
-        logoImg.setFitHeight(115);
-        logoImg.setFitWidth(110);
+        return iconUrl;
+    }
 
+    private Parent createAppInfo() {
         Text appInfo = new Text("SQLines Studio\n  Version: 3.0");
         Text copyrightInfo = new Text("© 2021 SQLines\nAll rights reserved");
 
@@ -69,15 +80,25 @@ class AboutWindow extends Window {
         infoLayout.setAlignment(Pos.CENTER);
         infoLayout.setSpacing(5);
 
-        VBox copyrightLayout = new VBox(copyrightInfo);
-        copyrightLayout.setAlignment(Pos.CENTER);
+        return infoLayout;
+    }
 
-        VBox mainLayout = new VBox(logoImg, infoLayout, copyrightLayout);
+    private Parent createMainLayout(Node logo, Node appInfo) {
+        VBox mainLayout = new VBox(logo, appInfo);
         mainLayout.setId("aboutWindow");
         mainLayout.setSpacing(10);
         mainLayout.setAlignment(Pos.CENTER);
         mainLayout.setPadding(new Insets(50, 0, 60, 0));
 
         return mainLayout;
+    }
+
+    private void setUpWindow() {
+        initModality(Modality.APPLICATION_MODAL);
+        initStyle(StageStyle.UTILITY);
+        setTitle("About SQLines Studio");
+        setHeight(240);
+        setWidth(230);
+        setResizable(false);
     }
 }

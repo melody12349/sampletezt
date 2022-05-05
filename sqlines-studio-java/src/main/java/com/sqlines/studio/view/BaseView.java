@@ -19,8 +19,6 @@ package com.sqlines.studio.view;
 import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Interface through with the presenter / controller can interact with UI.
  * Provides methods for basic work with UI.
@@ -54,7 +52,7 @@ public interface BaseView {
      *
      * @throws UnsupportedOperationException if the requested operation is not supported
      */
-    default void setWindowTitle(@NotNull String title) {
+    default void setWindowTitle(String title) {
         throw new UnsupportedOperationException();
     }
 
@@ -68,7 +66,7 @@ public interface BaseView {
      * did not find the required resource
      * @throws UnsupportedOperationException if the requested operation is not supported
      */
-    default void showError(@NotNull String cause, @NotNull String errorMsg) {
+    default void showError(String cause, String errorMsg) {
         throw new UnsupportedOperationException();
     }
 
@@ -79,7 +77,7 @@ public interface BaseView {
      *
      * @throws UnsupportedOperationException if the requested operation is not supported
      */
-    default void setOnTabCloseAction(@NotNull EventHandler<WindowEvent> action) {
+    default void setOnTabCloseAction(EventHandler<WindowEvent> action) {
         throw new UnsupportedOperationException();
     }
 }

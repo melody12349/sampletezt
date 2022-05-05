@@ -22,7 +22,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.Optional;
 
 /**
  * Central control in the main window.
@@ -34,7 +34,7 @@ class CentralNode extends HBox {
     /**
      * Represents currently focused text input field.
      */
-    public enum FieldInFocus { SOURCE, TARGET }
+    public enum inFocus { SOURCE, TARGET }
 
     /**
      * An enumeration denoting the policy to be used by a CentralNode
@@ -46,11 +46,17 @@ class CentralNode extends HBox {
     private final CodeEditor targetEditor = new CodeEditor();
 
     public CentralNode() {
+        setUp();
+        showTargetFieldOnTextChange();
+    }
+
+    private void setUp() {
         getChildren().addAll(sourceEditor);
         setSpacing(10);
         setPadding(new Insets(5, 5, 5, 5));
+    }
 
-        // Show the target text input field only if there is data in it
+    private void showTargetFieldOnTextChange() {
         targetEditor.addTextListener((observable, oldText, newText) -> {
             if (!newText.isEmpty() && !getChildren().contains(targetEditor)) {
                 getChildren().add(targetEditor);
@@ -63,7 +69,7 @@ class CentralNode extends HBox {
      *
      * @param text text to set
      */
-    public void setSourceText(@NotNull String text) {
+    public void setSourceText(String text) {
        sourceEditor.setText(text);
     }
 
@@ -72,7 +78,7 @@ class CentralNode extends HBox {
      *
      * @param text text to set
      */
-    public void setTargetText(@NotNull String text) {
+    public void setTargetText(String text) {
         targetEditor.setText(text);
     }
 
@@ -109,10 +115,17 @@ class CentralNode extends HBox {
      * Does nothing if none of the input fields are in focus.
      */
     public void undo() {
+        Optional<CodeEditor> inFocus = inFocus();
+        inFocus.ifPresent(CodeEditor::undo);
+    }
+
+    private Optional<CodeEditor> inFocus() {
         if (sourceEditor.hasFocus()) {
-            sourceEditor.undo();
+            return Optional.of(sourceEditor);
         } else if (targetEditor.hasFocus()) {
-            targetEditor.undo();
+            return Optional.of(targetEditor);
+        } else {
+            return Optional.empty();
         }
     }
 
@@ -122,11 +135,8 @@ class CentralNode extends HBox {
      * Does nothing if none of the input fields are in focus.
      */
     public void redo() {
-        if (sourceEditor.hasFocus()) {
-            sourceEditor.redo();
-        } else if (targetEditor.hasFocus()) {
-            targetEditor.redo();
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        inFocus.ifPresent(CodeEditor::redo);
     }
 
     /**
@@ -134,11 +144,8 @@ class CentralNode extends HBox {
      * Does nothing if none of the input fields are in focus.
      */
     public void selectAll() {
-        if (sourceEditor.hasFocus()) {
-            sourceEditor.selectAll();
-        } else if (targetEditor.hasFocus()) {
-            targetEditor.selectAll();
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        inFocus.ifPresent(CodeEditor::selectAll);
     }
 
     /**
@@ -147,11 +154,8 @@ class CentralNode extends HBox {
      * Does nothing if none of the input fields are in focus.
      */
     public void cut() {
-        if (sourceEditor.hasFocus()) {
-            sourceEditor.cut();
-        } else if (targetEditor.hasFocus()) {
-            targetEditor.cut();
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        inFocus.ifPresent(CodeEditor::cut);
     }
 
     /**
@@ -160,11 +164,8 @@ class CentralNode extends HBox {
      * Does nothing if none of the input fields are in focus.
      */
     public void copy() {
-        if (sourceEditor.hasFocus()) {
-            sourceEditor.copy();
-        } else if (targetEditor.hasFocus()) {
-            targetEditor.copy();
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        inFocus.ifPresent(CodeEditor::copy);
     }
 
     /**
@@ -175,11 +176,8 @@ class CentralNode extends HBox {
      * Does nothing if none of the input fields are in focus.
      */
     public void paste() {
-        if (sourceEditor.hasFocus()) {
-            sourceEditor.paste();
-        } else if (targetEditor.hasFocus()) {
-            targetEditor.paste();
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        inFocus.ifPresent(CodeEditor::paste);
     }
 
     /**
@@ -187,13 +185,9 @@ class CentralNode extends HBox {
      * text input field, false otherwise
      */
     public boolean isUndoAvailable() {
-        if (sourceEditor.hasFocus()) {
-            return sourceEditor.isUndoAvailable();
-        } else if (targetEditor.hasFocus()) {
-            return targetEditor.isUndoAvailable();
-        } else {
-            return false;
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        return inFocus.map(CodeEditor::isUndoAvailable)
+                .orElse(false);
     }
 
     /**
@@ -201,13 +195,9 @@ class CentralNode extends HBox {
      * text input field, false otherwise
      */
     public boolean isRedoAvailable() {
-        if (sourceEditor.hasFocus()) {
-            return sourceEditor.isRedoAvailable();
-        } else if (targetEditor.hasFocus()) {
-            return targetEditor.isRedoAvailable();
-        } else {
-            return false;
-        }
+        Optional<CodeEditor> inFocus = inFocus();
+        return inFocus.map(CodeEditor::isRedoAvailable)
+                .orElse(false);
     }
 
     /**
@@ -231,10 +221,10 @@ class CentralNode extends HBox {
      *
      * @param inFocus text input field to focus on
      */
-    public void focusOn(@NotNull CentralNode.FieldInFocus inFocus) {
-       if (inFocus == FieldInFocus.SOURCE) {
+    public void focusOn(inFocus inFocus) {
+       if (inFocus == CentralNode.inFocus.SOURCE) {
             sourceEditor.requestFocus();
-        } else if (inFocus == FieldInFocus.TARGET) {
+        } else if (inFocus == CentralNode.inFocus.TARGET) {
             targetEditor.requestFocus();
         }
     }
@@ -242,11 +232,11 @@ class CentralNode extends HBox {
     /**
      * Sets the {@link TargetFieldPolicy}.
      * <p>
-     * The default value is {@link TargetFieldPolicy#AS_NEEDED}.
+     * The default value is AS_NEEDED.
      *
      * @param policy target field policy to set
      */
-    public void setTargetFieldPolicy(@NotNull TargetFieldPolicy policy) {
+    public void setTargetFieldPolicy(TargetFieldPolicy policy) {
         if (policy == TargetFieldPolicy.ALWAYS) {
             if (!getChildren().contains(targetEditor)) {
                 getChildren().add(targetEditor);
@@ -261,11 +251,11 @@ class CentralNode extends HBox {
     /**
      * Sets the {@link CodeEditor.WrappingPolicy} of the text input fields.
      * <p>
-     * The default value is {@link CodeEditor.WrappingPolicy#NO_WRAP}.
+     * The default value is NO_WRAP.
      *
      * @param policy wrapping policy to set
      */
-    public void setWrappingPolicy(@NotNull CodeEditor.WrappingPolicy policy) {
+    public void setWrappingPolicy(CodeEditor.WrappingPolicy policy) {
         sourceEditor.setWrappingPolicy(policy);
         targetEditor.setWrappingPolicy(policy);
     }
@@ -273,11 +263,11 @@ class CentralNode extends HBox {
     /**
      * Sets the {@link CodeEditor.HighlighterPolicy} of the text input fields.
      * <p>
-     * The default value is {@link CodeEditor.HighlighterPolicy#HIGHLIGHT}.
+     * The default value is HIGHLIGHT.
      *
      * @param policy highlighter policy to set
      */
-    public void setHighlighterPolicy(@NotNull CodeEditor.HighlighterPolicy policy) {
+    public void setHighlighterPolicy(CodeEditor.HighlighterPolicy policy) {
         sourceEditor.setHighlighterPolicy(policy);
         targetEditor.setHighlighterPolicy(policy);
     }
@@ -285,11 +275,11 @@ class CentralNode extends HBox {
     /**
      * Sets the {@link CodeEditor.LineNumbersPolicy} of the text input fields.
      * <p>
-     * The default value is {@link CodeEditor.LineNumbersPolicy#SHOW}.
+     * The default value is SHOW.
      *
      * @param policy line numbers policy to set
      */
-    public void setLineNumbersPolicy(@NotNull CodeEditor.LineNumbersPolicy policy) {
+    public void setLineNumbersPolicy(CodeEditor.LineNumbersPolicy policy) {
         sourceEditor.setLineNumbersPolicy(policy);
         targetEditor.setLineNumbersPolicy(policy);
     }
@@ -301,7 +291,7 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addSourceTextListener(@NotNull ChangeListener<String> listener) {
+    public void addSourceTextListener(ChangeListener<String> listener) {
         sourceEditor.addTextListener(listener);
     }
 
@@ -312,7 +302,7 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addTargetTextListener(@NotNull ChangeListener<String> listener) {
+    public void addTargetTextListener(ChangeListener<String> listener) {
         targetEditor.addTextListener(listener);
     }
 
@@ -323,8 +313,8 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addSourceLineListener(@NotNull ChangeListener<Integer> listener) {
-        sourceEditor.addLineListener(listener);
+    public void addSourceLineIndexListener(ChangeListener<Integer> listener) {
+        sourceEditor.addLineIndexListener(listener);
     }
 
     /**
@@ -334,8 +324,8 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addTargetLineListener(@NotNull ChangeListener<Integer> listener) {
-        targetEditor.addLineListener(listener);
+    public void addTargetLineIndexListener(ChangeListener<Integer> listener) {
+        targetEditor.addLineIndexListener(listener);
     }
 
     /**
@@ -345,8 +335,8 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addSourceColumnListener(@NotNull ChangeListener<Integer> listener) {
-        sourceEditor.addColumnListener(listener);
+    public void addSourceColumnIndexListener(ChangeListener<Integer> listener) {
+        sourceEditor.addColumnIndexListener(listener);
     }
 
     /**
@@ -356,8 +346,8 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addTargetColumnListener(@NotNull ChangeListener<Integer> listener) {
-        targetEditor.addColumnListener(listener);
+    public void addTargetColumnIndexListener(ChangeListener<Integer> listener) {
+        targetEditor.addColumnIndexListener(listener);
     }
 
     /**
@@ -366,7 +356,7 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addSourceFocusListener(@NotNull ChangeListener<Boolean> listener) {
+    public void addSourceFocusListener(ChangeListener<Boolean> listener) {
         sourceEditor.addFocusListener(listener);
     }
 
@@ -376,7 +366,7 @@ class CentralNode extends HBox {
      *
      * @param listener the listener to register
      */
-    public void addTargetFocusListener(@NotNull ChangeListener<Boolean> listener) {
+    public void addTargetFocusListener(ChangeListener<Boolean> listener) {
         targetEditor.addFocusListener(listener);
     }
 }

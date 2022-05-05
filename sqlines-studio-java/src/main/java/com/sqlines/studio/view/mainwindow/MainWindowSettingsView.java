@@ -21,8 +21,6 @@ import com.sqlines.studio.view.BaseView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Interface through with the presenter / controller can interact with the main window UI.
  * Provides methods to configure the main window.
@@ -97,38 +95,38 @@ public interface MainWindowSettingsView extends BaseView {
     /**
      * Sets the {@link StatusBarPolicy}.
      * <p>
-     * The default value is {@link StatusBarPolicy#SHOW}.
+     * The default value is SHOW.
      *
      * @param policy status bar policy to set
      */
-    void setStatusBarPolicy(@NotNull StatusBarPolicy policy);
+    void setStatusBarPolicy(StatusBarPolicy policy);
 
     /**
      * Sets the {@link TargetFieldPolicy}.
      * <p>
-     * The default value is {@link TargetFieldPolicy#AS_NEEDED}.
+     * The default value is AS_NEEDED.
      *
      * @param policy target field policy to set
      */
-    void setTargetFieldPolicy(@NotNull TargetFieldPolicy policy);
+    void setTargetFieldPolicy(TargetFieldPolicy policy);
 
     /**
      * Sets the {@link WrappingPolicy} of the text input fields.
      * <p>
-     * The default value is {@link WrappingPolicy#NO_WRAP}.
+     * The default value is NO_WRAP.
      *
      * @param policy wrapping policy to set
      */
-    void setWrappingPolicy(@NotNull WrappingPolicy policy);
+    void setWrappingPolicy(WrappingPolicy policy);
 
     /**
      * Sets the {@link HighlighterPolicy} of the text input fields.
      * <p>
-     * The default value is {@link HighlighterPolicy#HIGHLIGHT}.
+     * The default value is HIGHLIGHT.
      *
      * @param policy highlighter policy to set
      */
-    void setHighlighterPolicy(@NotNull HighlighterPolicy policy);
+    void setHighlighterPolicy(HighlighterPolicy policy);
 
     /**
      * Sets the {@link LineNumbersPolicy} of the text input fields.
@@ -137,7 +135,7 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param policy line numbers policy to set
      */
-    void setLineNumbersPolicy(@NotNull LineNumbersPolicy policy);
+    void setLineNumbersPolicy(LineNumbersPolicy policy);
 
     /**
      * Sets the action which is invoked when
@@ -145,7 +143,7 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnPreferencesAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnPreferencesAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when
@@ -153,7 +151,7 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnStatusBarAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnStatusBarAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when the Always Show Target Field check menu item
@@ -161,7 +159,7 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnTargetFieldAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnTargetFieldAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when the Wrap Lines To Editor Width check menu item
@@ -169,7 +167,7 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnWrappingAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnWrappingAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when the Highlighter check menu item
@@ -177,7 +175,7 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnHighlighterAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnHighlighterAction(EventHandler<ActionEvent> action);
 
     /**
      * Sets the action which is invoked when the Line Numbers check menu item
@@ -185,5 +183,5 @@ public interface MainWindowSettingsView extends BaseView {
      *
      * @param action the action to register
      */
-    void setOnLineNumbersAction(@NotNull EventHandler<ActionEvent> action);
+    void setOnLineNumbersAction(EventHandler<ActionEvent> action);
 }

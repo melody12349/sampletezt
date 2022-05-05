@@ -106,7 +106,9 @@ public class License implements Runnable {
         getLicenseFile(); // Check license file presence
         String logFilePath = createLogFile();
         try {
-            coreProcess.runAndWait(logFilePath);
+            String[] args = { "-log = " + logFilePath,
+                              "-?"  };
+            coreProcess.runWithArgsAndWait(args);
             deleteLogFile(logFilePath);
         } catch (IOException | SecurityException e) {
             return false;

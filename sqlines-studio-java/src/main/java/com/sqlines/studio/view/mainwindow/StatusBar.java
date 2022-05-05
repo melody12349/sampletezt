@@ -25,8 +25,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Horizontal bar containing 2 text areas:
  * <li>File path area
@@ -41,7 +39,33 @@ class StatusBar extends HBox {
     private int currColumnNumber = 1;
 
     public StatusBar() {
-        // Stop the tab key and the arrow keys from navigating through the controls
+        setUp();
+        ignoreKeyEvents();
+    }
+
+    private void setUp() {
+        setUpRightToolBar();
+        ToolBar leftToolBar = createLeftToolBar();
+
+        getChildren().addAll(leftToolBar, rightToolBar);
+        setHgrow(leftToolBar, Priority.ALWAYS);
+        setHgrow(rightToolBar, Priority.NEVER);
+    }
+
+    private void setUpRightToolBar() {
+        rightToolBar.setId("statusBar");
+        rightToolBar.getItems().add(lineColumnNumber);
+    }
+
+    private ToolBar createLeftToolBar() {
+        ToolBar leftToolBar = new ToolBar();
+        leftToolBar.setId("statusBar");
+        leftToolBar.getItems().add(filePath);
+
+        return leftToolBar;
+    }
+
+    private void ignoreKeyEvents() {
         addEventFilter(KeyEvent.ANY, keyEvent -> {
             if (keyEvent.getCode() == KeyCode.TAB
                     || keyEvent.getCode() == KeyCode.RIGHT
@@ -51,20 +75,6 @@ class StatusBar extends HBox {
                 keyEvent.consume();
             }
         });
-
-        filePath.setText("Source: Editor");
-        lineColumnNumber.setText("Line: 1, Column: 1");
-
-        rightToolBar.setId("statusBar");
-        rightToolBar.getItems().add(lineColumnNumber);
-
-        ToolBar leftToolBar = new ToolBar();
-        leftToolBar.setId("statusBar");
-        leftToolBar.getItems().add(filePath);
-
-        getChildren().addAll(leftToolBar, rightToolBar);
-        setHgrow(leftToolBar, Priority.ALWAYS);
-        setHgrow(rightToolBar, Priority.NEVER);
     }
 
     /**
@@ -82,12 +92,12 @@ class StatusBar extends HBox {
     }
 
     /**
-     * Defines file path that is to be displayed.
+     * Defines a file path that is to be displayed.
      * If the path is empty, "Source: Editor" is shown.
      *
      * @param path file path to display
      */
-    public void setFilePath(@NotNull String path) {
+    public void setFilePath(String path) {
         if (!path.isEmpty()) {
             filePath.setText("Source: " + path);
         } else {

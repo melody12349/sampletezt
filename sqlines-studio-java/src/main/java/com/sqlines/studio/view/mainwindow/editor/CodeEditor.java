@@ -36,15 +36,13 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.NavigationActions;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A text input field with the line number area, highlighter, fixed-width font,
  * scroll bars, context menu and undo manager.
  * <p>
  * Allows listeners to track changes when they occur.
  *
- * @implNote {@link CodeEditor} uses FXMisc library.
+ * @implNote CodeEditor uses FXMisc library.
  * See details: <a href=https://github.com/FXMisc/RichTextFX">GitHub-RichTextFX</a>.
  */
 public class CodeEditor extends VBox {
@@ -78,24 +76,14 @@ public class CodeEditor extends VBox {
     private int fontSize = 13;
 
     public CodeEditor() {
+        setUpAutoIntent();
         setUpHighlighter();
-        setUpContextMenu();
+        setUpScrollPane();
         setUpLineNumberArea();
-
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-
-        // Standard preferred size not working
-        scrollPane.setPrefWidth(4000);
-        scrollPane.setPrefHeight(4000);
-
-        getChildren().add(scrollPane);
+        setUpContextMenu();
     }
 
-    private void setUpHighlighter() {
-        codeArea.getVisibleParagraphs().addModificationObserver(styler);
-
-        // Auto-indent: insert previous line's indents on enter
+    private void setUpAutoIntent() {
         Pattern whiteSpace = Pattern.compile( "^\\s+" );
         addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
@@ -110,6 +98,21 @@ public class CodeEditor extends VBox {
         });
     }
 
+    private void setUpHighlighter() {
+        codeArea.getVisibleParagraphs().addModificationObserver(styler);
+    }
+
+    private void setUpScrollPane() {
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        // Standard preferred size not working
+        scrollPane.setPrefWidth(8000);
+        scrollPane.setPrefHeight(8000);
+
+        getChildren().add(scrollPane);
+    }
+
     private void setUpLineNumberArea() {
         IntFunction<Node> lineNumFactory = LineNumberFactory.get(codeArea);
         codeArea.setParagraphGraphicFactory(currLine -> {
@@ -121,12 +124,7 @@ public class CodeEditor extends VBox {
 
     private void setUpContextMenu() {
         EditorContextMenu menu = new EditorContextMenu();
-        menu.setOnUndoAction(event -> codeArea.undo());
-        menu.setOnRedoAction(event -> codeArea.redo());
-        menu.setOnSelectAllAction(event -> codeArea.selectAll());
-        menu.setOnCutAction(event -> codeArea.cut());
-        menu.setOnCopyAction(event -> codeArea.copy());
-        menu.setOnPasteAction(event -> codeArea.paste());
+        setUpMenuEvents(menu);
 
         codeArea.setContextMenu(menu);
         codeArea.setOnContextMenuRequested(event -> {
@@ -135,15 +133,31 @@ public class CodeEditor extends VBox {
         });
     }
 
+    private void setUpMenuEvents(EditorContextMenu menu) {
+        menu.setOnUndoAction(event -> codeArea.undo());
+        menu.setOnRedoAction(event -> codeArea.redo());
+        menu.setOnSelectAllAction(event -> codeArea.selectAll());
+        menu.setOnCutAction(event -> codeArea.cut());
+        menu.setOnCopyAction(event -> codeArea.copy());
+        menu.setOnPasteAction(event -> codeArea.paste());
+    }
+
     @Override
     public void requestFocus() {
         Platform.runLater(codeArea::requestFocus);
     }
 
     /**
+     * @return true if the text-editing area is in focus, false otherwise
+     */
+    public boolean hasFocus() {
+        return codeArea.isFocused();
+    }
+
+    /**
      * @return text content of this CodeEditor
      */
-    public @NotNull String getText() {
+    public String getText() {
         return codeArea.getText();
     }
 
@@ -153,7 +167,7 @@ public class CodeEditor extends VBox {
      *
      * @param text text to set
      */
-    public void setText(@NotNull String text) {
+    public void setText(String text) {
         codeArea.replaceText(text);
         codeArea.moveTo(0, 0, NavigationActions.SelectionPolicy.CLEAR);
     }
@@ -175,28 +189,36 @@ public class CodeEditor extends VBox {
     /**
      * Sets the {@link WrappingPolicy}.
      * <p>
-     * The default value is {@link WrappingPolicy#NO_WRAP}.
+     * The default value is NO_WRAP.
      *
      * @param policy wrapping policy to set
      */
-    public void setWrappingPolicy(@NotNull WrappingPolicy policy) {
+    public void setWrappingPolicy(WrappingPolicy policy) {
         if (policy == WrappingPolicy.NO_WRAP) {
-            codeArea.setWrapText(false);
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            disableWrapping();
         } else if (policy == WrappingPolicy.WRAP_LINES) {
-            codeArea.setWrapText(true);
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            enableWrapping();
         }
+    }
+
+    private void disableWrapping() {
+        codeArea.setWrapText(false);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+    }
+
+    private void enableWrapping() {
+        codeArea.setWrapText(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
     }
 
     /**
      * Sets the {@link HighlighterPolicy}.
      * <p>
-     * The default value is {@link HighlighterPolicy#HIGHLIGHT}.
+     * The default value is HIGHLIGHT.
      *
      * @param policy highlighter policy to set
      */
-    public void setHighlighterPolicy(@NotNull HighlighterPolicy policy) {
+    public void setHighlighterPolicy(HighlighterPolicy policy) {
         if (this.highlighterPolicy == policy) {
             return;
         }
@@ -221,11 +243,11 @@ public class CodeEditor extends VBox {
     /**
      * Sets the {@link LineNumbersPolicy}.
      * <p>
-     * The default value is {@link LineNumbersPolicy#SHOW}.
+     * The default value is SHOW.
      *
      * @param policy line numbers policy to set
      */
-    public void setLineNumbersPolicy(@NotNull LineNumbersPolicy policy) {
+    public void setLineNumbersPolicy(LineNumbersPolicy policy) {
         if (this.lineNumbersPolicy == policy) {
             return;
         }
@@ -234,8 +256,12 @@ public class CodeEditor extends VBox {
         if (policy == LineNumbersPolicy.SHOW) {
             setUpLineNumberArea();
         } else if (policy == LineNumbersPolicy.DO_NOT_SHOW) {
-            codeArea.setParagraphGraphicFactory(null);
+            removeLineNumberArea();
         }
+    }
+
+    private void removeLineNumberArea() {
+        codeArea.setParagraphGraphicFactory(null);
     }
 
     /**
@@ -319,7 +345,7 @@ public class CodeEditor extends VBox {
      *
      * @param listener the listener to register
      */
-    public void addTextListener(@NotNull ChangeListener<String> listener) {
+    public void addTextListener(ChangeListener<String> listener) {
         codeArea.textProperty().addListener(listener);
     }
 
@@ -329,7 +355,7 @@ public class CodeEditor extends VBox {
      *
      * @param listener the listener to register
      */
-    public void addLineListener(@NotNull ChangeListener<Integer> listener) {
+    public void addLineIndexListener(ChangeListener<Integer> listener) {
         codeArea.getCaretSelectionBind().paragraphIndexProperty().addListener(listener);
     }
 
@@ -339,7 +365,7 @@ public class CodeEditor extends VBox {
      *
      * @param listener the listener to register
      */
-    public void addColumnListener(@NotNull ChangeListener<Integer> listener) {
+    public void addColumnIndexListener(ChangeListener<Integer> listener) {
         codeArea.caretColumnProperty().addListener(listener);
     }
 
@@ -349,14 +375,7 @@ public class CodeEditor extends VBox {
      *
      * @param listener the listener to register
      */
-    public void addFocusListener(@NotNull ChangeListener<Boolean> listener) {
+    public void addFocusListener(ChangeListener<Boolean> listener) {
         codeArea.focusedProperty().addListener(listener);
-    }
-
-    /**
-     * @return true if the text-editing area is in focus, false otherwise
-     */
-    public boolean hasFocus() {
-        return codeArea.isFocused();
     }
 }

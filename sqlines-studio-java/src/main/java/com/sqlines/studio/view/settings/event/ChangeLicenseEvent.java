@@ -19,8 +19,6 @@ package com.sqlines.studio.view.settings.event;
 import javafx.event.Event;
 import javafx.event.EventType;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * An event representing a click on a change license button.
  */
@@ -38,7 +36,7 @@ public class ChangeLicenseEvent extends Event {
      * @param regName registration name entered
      * @param regNumber registration number entered
      */
-    public ChangeLicenseEvent(@NotNull String regName, @NotNull String regNumber) {
+    public ChangeLicenseEvent(String regName, String regNumber) {
         super(CLICKED);
         this.regName = regName;
         this.regNumber = regNumber;
