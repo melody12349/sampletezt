@@ -168,7 +168,7 @@ public class SettingsPresenter {
         }
 
         String currDir = properties.getProperty("model.curr-dir", "Home");
-        if (currDir.equals(properties.getProperty("user.home"))) {
+        if (currDir.equals(properties.getProperty("user.home") + "/sqlines")) {
             currDir = "Home";
         }
 

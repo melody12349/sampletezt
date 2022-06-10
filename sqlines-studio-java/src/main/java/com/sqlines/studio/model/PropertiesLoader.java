@@ -42,7 +42,7 @@ import org.apache.logging.log4j.LogManager;
  * | model.app-dir      | path                  | Jar directory path              |
  * | view.theme         | "light", "dark"       | Current theme                   |
  * | view.status-bar    | "show", "do-not-show" | Status bar policy               |
- * | view.target-field  | "always", "as-needed" | Target field policy             |
+ * | view.target-field   | "always", "as-needed" | Target field policy              |
  * | view.wrapping      | "enabled", "disabled" | Wrapping policy                 |
  * | view.highlighter   | "enabled", "disabled" | Highlighter policy              |
  * | view.line-numbers  | "enabled", "disabled" | Line-numbers policy             |
@@ -70,13 +70,13 @@ public class PropertiesLoader {
      * | Key                | Value                                    |
      * |--------------------|------------------------------------------|
      * | model.save-session | "enabled"                                |
-     * | model.curr-dir     | properties.getProperty("user.home")      |
+     * | model.curr-dir     | user.home + /sqlines                     |
      * | model.dirs-number  | 0                                        |
      * | model.app-dir      | jar path                                 |
      * | model.last-dir     | "null"                                   |
      * | view.theme         | "light"                                  |
      * | view.status-bar    | "show"                                   |
-     * | view.target-field  | "always"                                 |
+     * | view.target-field   | "always"                                 |
      * | view.wrapping      | "disabled"                               |
      * | view.highlighter   | "enabled"                                |
      * | view.line-numbers  | "enabled"                                |
@@ -88,46 +88,21 @@ public class PropertiesLoader {
      * </pre>
      */
     public static void setDefaults() {
+        serDefaultModelProperties();
+        serDefaultViewProperties();
+        loadAppDir();
+    }
+
+    private static void serDefaultModelProperties() {
         int dirsNumber = Integer.parseInt(properties.getProperty("model.dirs-number", "0"));
         for (int i = 0; i < dirsNumber; i++) {
             properties.remove("model.dir-" + i);
         }
 
         properties.setProperty("model.save-session", "enabled");
-        properties.setProperty("model.curr-dir", properties.getProperty("user.home"));
+        properties.setProperty("model.curr-dir", properties.getProperty("user.home") + "/sqlines");
         properties.setProperty("model.dirs-number", "0");
         properties.setProperty("model.last-dir", "null");
-        properties.setProperty("view.theme", "light");
-        properties.setProperty("view.status-bar", "show");
-        properties.setProperty("view.target-field", "always");
-        properties.setProperty("view.wrapping", "disabled");
-        properties.setProperty("view.highlighter", "enabled");
-        properties.setProperty("view.line-numbers", "enabled");
-        properties.setProperty("view.height", "650.0");
-        properties.setProperty("view.width", "770.0");
-        properties.setProperty("view.pos.x", "0.0");
-        properties.setProperty("view.pos.y", "0.0");
-        properties.setProperty("view.is-maximized", "false");
-
-        loadAppDir();
-    }
-
-    /**
-     * Loads properties from the properties file.
-     *
-     * @throws FileNotFoundException if the file does not exist, is a directory rather
-     * than a regular file, or for some other reason cannot be opened for reading.
-     * @throws IOException - if any IO error occurred
-     * @throws SecurityException if a security manager exists and its
-     * checkRead method denies read access to the file
-     */
-    public static void loadProperties() throws IOException {
-        String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
-        File propertiesFile = new File(path);
-        try (FileInputStream stream = new FileInputStream(propertiesFile)) {
-            properties.load(stream);
-            loadAppDir();
-        }
     }
 
     private static void loadAppDir() {
@@ -142,6 +117,42 @@ public class PropertiesLoader {
             properties.setProperty("model.app-dir", appPath);
         } catch (Exception e) {
             logger.error("Loading application dir: " + e.getMessage());
+        }
+    }
+
+    private static void serDefaultViewProperties() {
+        properties.setProperty("view.theme", "light");
+        properties.setProperty("view.status-bar", "show");
+        properties.setProperty("view.target-field", "always");
+        properties.setProperty("view.wrapping", "disabled");
+        properties.setProperty("view.highlighter", "enabled");
+        properties.setProperty("view.line-numbers", "enabled");
+        properties.setProperty("view.height", "650.0");
+        properties.setProperty("view.width", "770.0");
+        properties.setProperty("view.pos.x", "0.0");
+        properties.setProperty("view.pos.y", "0.0");
+        properties.setProperty("view.is-maximized", "false");
+    }
+
+    /**
+     * Loads properties from the properties file.
+     *
+     * @throws FileNotFoundException if the file does not exist, is a directory rather
+     * than a regular file, or for some other reason cannot be opened for reading.
+     * @throws IOException - if any IO error occurred
+     * @throws SecurityException if a security manager exists and its
+     * checkRead method denies read access to the file
+     */
+    public static void loadProperties() throws IOException {
+        String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
+        File propertiesFile = new File(path);
+        loadFromFile(propertiesFile);
+    }
+
+    private static void loadFromFile(File file) throws IOException {
+        try (FileInputStream stream = new FileInputStream(file)) {
+            properties.load(stream);
+            loadAppDir();
         }
     }
 
@@ -160,13 +171,24 @@ public class PropertiesLoader {
         String path = properties.getProperty("java.io.tmpdir") + "sqlines-properties.txt";
         File propertiesFile = new File(path);
         if (!propertiesFile.exists()) {
-            boolean success = propertiesFile.createNewFile();
-            if (!success) {
-                throw new IOException("Cannot create properties file: " + path);
-            }
+            propertiesFile = createFile(path);
         }
 
-        try (FileOutputStream stream = new FileOutputStream(propertiesFile)) {
+        saveToFile(propertiesFile);
+    }
+
+    private static File createFile(String path) throws IOException {
+        File file = new File(path);
+        boolean success = file.createNewFile();
+        if (!success) {
+            throw new IOException("Cannot create properties file: " + path);
+        }
+
+        return file;
+    }
+
+    private static void saveToFile(File file) throws IOException {
+        try (FileOutputStream stream = new FileOutputStream(file)) {
             properties.store(stream, "SQLines Studio properties");
         }
     }

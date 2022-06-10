@@ -16,20 +16,22 @@
 
 package com.sqlines.studio.model.license;
 
-import com.sqlines.studio.model.CoreProcess;
+import com.sqlines.studio.model.coreprocess.Arguments;
+import com.sqlines.studio.model.coreprocess.CoreProcessRunner;
 import com.sqlines.studio.model.license.listener.LicenseChangeListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Works with license file.
@@ -39,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 public class License implements Runnable {
     private static final Logger logger = LogManager.getLogger(License.class);
 
-    private final CoreProcess coreProcess;
+    private final CoreProcessRunner coreProcess;
     private final List<LicenseChangeListener> licenseListeners = new ArrayList<>(5);
     private long lastModified;
 
@@ -48,7 +50,7 @@ public class License implements Runnable {
      *
      * @param coreProcess sqlines command line program
      */
-    public License(@NotNull CoreProcess coreProcess) {
+    public License(CoreProcessRunner coreProcess) {
         this.coreProcess = coreProcess;
         try {
             File file = getLicenseFile();
@@ -58,7 +60,7 @@ public class License implements Runnable {
         }
     }
 
-    private @NotNull File getLicenseFile() {
+    private File getLicenseFile() {
         String path = System.getProperty("model.app-dir", "null") + "/license.txt";
         File licenseFile = new File(path);
         if (!licenseFile.exists()) {
@@ -69,16 +71,16 @@ public class License implements Runnable {
     }
 
     @Override
+    @SuppressWarnings("BusyWait")
     public void run() {
         while (true) {
             try {
-                monitorLicenseFile();
                 Thread.sleep(10000);
+                monitorLicenseFile();
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
-                logger.warn("run() - " + e.getMessage());
-                break;
+                logger.error("License check - " + e.getMessage());
             }
         }
     }
@@ -86,45 +88,44 @@ public class License implements Runnable {
     private synchronized void monitorLicenseFile() {
         File file = getLicenseFile();
         if (file.lastModified() != lastModified) {
-            if (isActive()) {
-                licenseListeners.forEach(license -> license.changed(true));
-            } else {
-                licenseListeners.forEach(license -> license.changed(false));
-            }
-
-            lastModified = file.lastModified();
+            String info = "Changing license due to license file update: license file updated at " +
+                    LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()),
+                            TimeZone.getDefault().toZoneId());
+            logger.info(info);
+            changeLicense(file.lastModified());
         }
+    }
+
+    private void changeLicense(long lastModified) {
+        licenseListeners.forEach(license -> license.changed(isActive()));
+        this.lastModified = lastModified;
+        logger.info("License changed");
     }
 
     /**
      * @return true if license is active, false otherwise
-     *
-     * @throws IllegalStateException if license file was not found
-     * @throws IllegalStateException if sqlines command-line program was not found
      */
     public synchronized boolean isActive() {
-        getLicenseFile(); // Check license file presence
-        String logFilePath = createLogFile();
         try {
-            String[] args = { "-log = " + logFilePath,
-                              "-?"  };
-            coreProcess.runWithArgsAndWait(args);
+            String logFilePath = createLogFile();
+            Arguments arguments = Arguments.builder()
+                    .withLogFilePath(logFilePath)
+                    .isLicenseCheck(true)
+                    .build();
+            String output = coreProcess.runAndWait(arguments);
             deleteLogFile(logFilePath);
-        } catch (IOException | SecurityException e) {
+            return !output.contains("FOR EVALUATION USE ONLY");
+        } catch (Exception e) {
+            logger.error(e.getMessage());
             return false;
-        } finally {
-            deleteLogFile(logFilePath);
         }
-
-        String out = coreProcess.getOutput();
-        return !out.contains("FOR EVALUATION USE ONLY");
     }
 
-    private @NotNull String createLogFile() {
+    private String createLogFile() {
         String path = "";
         try {
             File file = File.createTempFile("sqlines-log", ".tmp");
-            logger.error("Log file created: " + file.getAbsolutePath());
+            logger.info("Log file created: " + file.getAbsolutePath());
             path = file.getAbsolutePath();
         } catch (Exception e) {
             logger.error("Cannot create log file: " + e.getMessage());
@@ -133,11 +134,13 @@ public class License implements Runnable {
         return path;
     }
 
-    private void deleteLogFile(@NotNull String path) {
+    private void deleteLogFile(String path) {
         try {
             File file = new File(path);
             boolean success = file.delete();
-            if (!success) {
+            if (success) {
+                logger.info("Log file deleted: " + path);
+            } else {
                 logger.error("Cannot delete log file: " + path);
             }
         } catch (Exception e) {
@@ -160,21 +163,22 @@ public class License implements Runnable {
      * @throws SecurityException if a security manager exists and its checkWrite method
      * denies write access to the file
      */
-    public synchronized void changeLicense(@NotNull String regName, @NotNull String regNumber)
-            throws IOException {
-        File licenseFile = getLicenseFile();
-        try (FileOutputStream stream = new FileOutputStream(licenseFile)) {
+    public synchronized void changeLicense(String regName, String regNumber) throws IOException {
+        writeLicenseInfo(regName, regNumber);
+        if (isActive()) {
+            licenseListeners.forEach(license -> license.changed(true));
+        } else {
+            licenseListeners.forEach(license -> license.changed(false));
+            throw new IllegalArgumentException("Invalid registration data");
+        }
+    }
+
+    private void writeLicenseInfo(String regName, String regNumber) throws IOException {
+        try (FileOutputStream stream = new FileOutputStream(getLicenseFile())) {
             String info = "SQLines license file:\n" +
                     "\nRegistration Name: " + regName +
                     "\nRegistration Number: " + regNumber;
             stream.write(info.getBytes(StandardCharsets.UTF_8));
-
-            if (isActive()) {
-                licenseListeners.forEach(license -> license.changed(true));
-            } else {
-                licenseListeners.forEach(license -> license.changed(false));
-                throw new IllegalArgumentException("Invalid registration data");
-            }
         }
     }
 
@@ -184,7 +188,7 @@ public class License implements Runnable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addLicenseListener(@NotNull LicenseChangeListener listener) {
+    public synchronized void addLicenseListener(LicenseChangeListener listener) {
         licenseListeners.add(listener);
     }
 }

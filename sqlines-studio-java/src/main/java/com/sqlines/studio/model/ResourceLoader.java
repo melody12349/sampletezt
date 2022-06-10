@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Works with application resources.
  */
@@ -43,8 +41,7 @@ public class ResourceLoader {
      * in application resources or contains invalid data
      * @throws IOException if any IO error occurred
      */
-    public static @NotNull List<String> loadSourceModes() throws IOException {
-        List<String> sourceModes = new ArrayList<>();
+    public static List<String> loadSourceModes() throws IOException {
         try (InputStream stream = ResourceLoader.class.getResourceAsStream("/source-modes.txt")) {
             if (stream == null) {
                 String errorMsg = "File not found in application resources: source-modes.txt";
@@ -52,15 +49,20 @@ public class ResourceLoader {
             }
 
             String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            StringTokenizer tokenizer = new StringTokenizer(data, "\n");
-            while (tokenizer.hasMoreTokens()) {
-                String word = tokenizer.nextToken();
-                int endIndex = word.indexOf(':');
-                sourceModes.add(word.substring(0, endIndex));
-            }
+            return extractRawModes(data);
+        }
+    }
+
+    private static List<String> extractRawModes(String data) {
+        List<String> modes = new ArrayList<>();
+        StringTokenizer tokenizer = new StringTokenizer(data, "\n");
+        while (tokenizer.hasMoreTokens()) {
+            String word = tokenizer.nextToken();
+            int endIndex = word.indexOf(':');
+            modes.add(word.substring(0, endIndex));
         }
 
-        return sourceModes;
+        return modes;
     }
 
     /**
@@ -72,8 +74,7 @@ public class ResourceLoader {
      * in application resources or contains invalid data
      * @throws IOException if any IO error occurred
      */
-    public static @NotNull List<String> loadTargetModes() throws IOException {
-        List<String> targetModes = new ArrayList<>();
+    public static List<String> loadTargetModes() throws IOException {
         try (InputStream stream = ResourceLoader.class.getResourceAsStream("/target-modes.txt")) {
             if (stream == null) {
                 String errorMsg = "File not found in application resources: target-modes.txt";
@@ -81,15 +82,8 @@ public class ResourceLoader {
             }
 
             String data = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            StringTokenizer tokenizer = new StringTokenizer(data, "\n");
-            while (tokenizer.hasMoreTokens()) {
-                String word = tokenizer.nextToken();
-                int endIndex = word.indexOf(':');
-                targetModes.add(word.substring(0, endIndex));
-            }
+            return extractRawModes(data);
         }
-
-        return targetModes;
     }
 
     /**
@@ -102,8 +96,7 @@ public class ResourceLoader {
      * in application resources or contains invalid data
      * @throws IOException if any IO error occurred
      */
-    public static @NotNull Map<String, String> loadCmdModes() throws IOException {
-        Map<String, String> cmdModes = new HashMap<>();
+    public static Map<String, String> loadCmdModes() throws IOException {
         try (InputStream sourceModes = ResourceLoader.class.getResourceAsStream("/source-modes.txt");
              InputStream targetModes = ResourceLoader.class.getResourceAsStream("/target-modes.txt")) {
             if (sourceModes == null || targetModes == null) {
@@ -114,23 +107,25 @@ public class ResourceLoader {
 
             String sourceData = new String(sourceModes.readAllBytes(), StandardCharsets.UTF_8);
             String targetData = new String(targetModes.readAllBytes(), StandardCharsets.UTF_8);
-            StringTokenizer sourceTokenizer = new StringTokenizer(sourceData, "\n");
-            StringTokenizer targetTokenizer = new StringTokenizer(targetData, "\n");
+            Map<String, String> modes = extractCmdModes(sourceData);
+            modes.putAll(extractCmdModes(targetData));
+            return modes;
+        }
+    }
 
-            Consumer<String> addItem = data -> {
-                int endIndex = data.indexOf(':');
-                String key = data.substring(0, endIndex);
-                String value = data.substring(endIndex + 1);
-                cmdModes.put(key, value);
-            };
+    private static Map<String, String> extractCmdModes(String modes) {
+        StringTokenizer tokenizer = new StringTokenizer(modes, "\n");
+        Map<String, String> cmdModes = new HashMap<>();
 
-            while (sourceTokenizer.hasMoreTokens()) {
-                addItem.accept(sourceTokenizer.nextToken());
-            }
+        Consumer<String> addItem = data -> {
+            int endIndex = data.indexOf(':');
+            String key = data.substring(0, endIndex);
+            String value = data.substring(endIndex + 1);
+            cmdModes.put(key, value);
+        };
 
-            while (targetTokenizer.hasMoreTokens()) {
-                addItem.accept(targetTokenizer.nextToken());
-            }
+        while (tokenizer.hasMoreTokens()) {
+            addItem.accept(tokenizer.nextToken());
         }
 
         return cmdModes;
@@ -144,7 +139,7 @@ public class ResourceLoader {
      * @throws IllegalStateException if main window light stylesheets were not found
      * in application resources
      */
-    public static @NotNull String loadMainLightStyles() {
+    public static String loadMainLightStyles() {
         URL mainLight = ResourceLoader.class.getResource("/styles/main-light.css");
         if (mainLight == null) {
            String errorMsg = "File not found in application resources: styles/main-light.css";
@@ -162,7 +157,7 @@ public class ResourceLoader {
      * @throws IllegalStateException if main window dark stylesheets were not found
      * in application resources
      */
-    public static @NotNull String loadMainDarkStyles() {
+    public static String loadMainDarkStyles() {
         URL mainDark = ResourceLoader.class.getResource("/styles/main-dark.css");
         if (mainDark == null) {
             String errorMsg = "File not found in application resources: styles/main-dark.css";
@@ -180,7 +175,7 @@ public class ResourceLoader {
      * @throws IllegalStateException if settings window light stylesheets were not found
      * in application resources
      */
-    public static @NotNull String loadSettingLightStyles() {
+    public static String loadSettingLightStyles() {
         URL settingsLight = ResourceLoader.class.getResource("/styles/settings-light.css");
         if (settingsLight == null) {
             String errorMsg = "File not found in application resources: styles/settings-light.css";
@@ -198,7 +193,7 @@ public class ResourceLoader {
      * @throws IllegalStateException if settings window dark stylesheets were not found
      * in application resources
      */
-    public static @NotNull String loadSettingDarkStyles() {
+    public static String loadSettingDarkStyles() {
         URL settingsDark = ResourceLoader.class.getResource("/styles/settings-dark.css");
         if (settingsDark == null) {
             String errorMsg = "File not found in application resources: styles/settings-dark.css";

@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.model.filehandler.listener;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A RecentFilesChangeListener is notified whenever the list of recent files changes.
  */
@@ -29,7 +27,7 @@ public interface RecentFilesChangeListener {
      *
      * @param change an object representing the change that was done
      */
-    void onChange(@NotNull Change change);
+    void onChange(Change change);
 
     /**
      * Represents a report of changes done to the list of recent files.
@@ -55,13 +53,11 @@ public interface RecentFilesChangeListener {
          * @param path path to the changed recent file
          * @param fileIndex a file index where the change occurred
          *
-         * @throws IllegalStateException if change type is neither
-         * {@link ChangeType#FILE_ADDED} nor {@link ChangeType#FILE_REMOVED}
+         * @throws IllegalStateException if change type is neither FILE_ADDED nor FILE_REMOVED
          *
-         * @apiNote Suitable for the {@link ChangeType#FILE_ADDED} and the
-         * {@link ChangeType#FILE_REMOVED} change types.
+         * @apiNote Suitable for the FILE_ADDED and the FILE_REMOVED change types.
          */
-        public Change(@NotNull ChangeType changeType, @NotNull String path, int fileIndex) {
+        public Change(ChangeType changeType, String path, int fileIndex) {
             if (changeType != ChangeType.FILE_ADDED && changeType != ChangeType.FILE_REMOVED) {
                 String errorMsg = "Invalid change type: FILE_ADDED or FILE_REMOVED" +
                         " expected, " + changeType + " provided";
@@ -82,12 +78,11 @@ public interface RecentFilesChangeListener {
          * @param movedFrom initial tab index
          * @param movedTo new tab index
          *
-         * @throws IllegalStateException If change type is not {@link ChangeType#FILE_MOVED}
+         * @throws IllegalStateException If change type is not FILE_MOVED
          *
-         * @apiNote Suitable for the {@link ChangeType#FILE_MOVED} change type.
+         * @apiNote Suitable for the FILE_MOVED change type.
          */
-        public Change(@NotNull ChangeType changeType, @NotNull String path,
-                      int movedFrom, int movedTo) {
+        public Change(ChangeType changeType, String path, int movedFrom, int movedTo) {
             if (changeType != ChangeType.FILE_MOVED) {
                 String errorMsg = "Invalid change type: FILE_MOVED expected, " +
                         changeType + " provided";
@@ -103,22 +98,21 @@ public interface RecentFilesChangeListener {
         /**
          * @return the type of change that occurred in the list of recent files
          */
-        public @NotNull ChangeType getChangeType() {
+        public ChangeType getChangeType() {
             return changeType;
         }
 
         /**
          * @return recent file path
          */
-        public @NotNull String getFilePath() {
+        public String getFilePath() {
             return filePath;
         }
 
         /**
          * @return the file index where the change occurred
          *
-         * @throws IllegalStateException if change type is neither
-         * {@link ChangeType#FILE_ADDED} nor {@link ChangeType#FILE_REMOVED}
+         * @throws IllegalStateException if change type is neither FILE_ADDED nor FILE_REMOVED
          */
         public int getFileIndex() {
             if (changeType == ChangeType.FILE_MOVED) {
@@ -133,7 +127,7 @@ public interface RecentFilesChangeListener {
         /**
          * @return initial file index
          *
-         * @throws IllegalStateException if change type is not {@link ChangeType#FILE_MOVED}
+         * @throws IllegalStateException if change type is not FILE_MOVED
          */
         public int getMovedFrom() {
             if (changeType != ChangeType.FILE_MOVED) {
@@ -148,7 +142,7 @@ public interface RecentFilesChangeListener {
         /**
          * @return new file index
          *
-         * @throws IllegalStateException If change type is not {@link ChangeType#FILE_MOVED}
+         * @throws IllegalStateException If change type is not FILE_MOVED
          */
         public int getMovedTo() {
             if (changeType != ChangeType.FILE_MOVED) {

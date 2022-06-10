@@ -16,12 +16,15 @@
 
 package com.sqlines.studio;
 
-import com.sqlines.studio.model.CoreProcess;
+import com.sqlines.studio.model.converter.CmdModes;
+import com.sqlines.studio.model.converter.Converter;
+import com.sqlines.studio.model.converter.ConverterImpl;
+import com.sqlines.studio.model.coreprocess.CoreProcessRunner;
+import com.sqlines.studio.model.coreprocess.CoreProcessRunnerImp;
 import com.sqlines.studio.model.license.License;
 import com.sqlines.studio.model.PropertiesLoader;
 import com.sqlines.studio.model.ResourceLoader;
 import com.sqlines.studio.model.filehandler.FileHandler;
-import com.sqlines.studio.model.Converter;
 import com.sqlines.studio.model.tabsdata.ObservableTabsData;
 import com.sqlines.studio.presenter.MainWindowPresenter;
 import com.sqlines.studio.presenter.SettingsPresenter;
@@ -77,8 +80,9 @@ public class Application extends javafx.application.Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        CoreProcess coreProcess = new CoreProcess();
-        Converter converter = new Converter(tabsData, ResourceLoader.loadCmdModes(), coreProcess);
+        CoreProcessRunner coreProcess = new CoreProcessRunnerImp();
+        CmdModes modes = new CmdModes(ResourceLoader.loadCmdModes());
+        Converter converter = new ConverterImpl(modes, coreProcess);
         License license = new License(coreProcess);
 
         mainWindow = new MainWindow();

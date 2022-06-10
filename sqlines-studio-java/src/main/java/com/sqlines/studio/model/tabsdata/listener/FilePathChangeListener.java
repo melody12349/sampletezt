@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.model.tabsdata.listener;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A FilePathChangeListener is notified whenever the file path in any tab changes.
  */
@@ -30,5 +28,5 @@ public interface FilePathChangeListener {
      * @param newPath updated file path
      * @param tabIndex the index of the tab where the file path was changed
      */
-    void changed(@NotNull String newPath, int tabIndex);
+    void changed(String newPath, int tabIndex);
 }

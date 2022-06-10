@@ -16,7 +16,8 @@
 
 package com.sqlines.studio.presenter;
 
-import com.sqlines.studio.model.Converter;
+import com.sqlines.studio.model.converter.ConversionResult;
+import com.sqlines.studio.model.converter.Converter;
 import com.sqlines.studio.model.filehandler.FileHandler;
 import com.sqlines.studio.model.filehandler.listener.RecentFilesChangeListener;
 import com.sqlines.studio.model.tabsdata.ObservableTabsData;
@@ -493,7 +494,22 @@ public class MainWindowPresenter {
 
             Platform.runLater(() -> view.showConversionStart(currIndex));
             logger.info("Running conversion in tab " + currIndex);
-            converter.run(currIndex);
+
+            String sourceMode = tabsData.getSourceMode(currIndex);
+            String targetMode = tabsData.getTargetMode(currIndex);
+            String targetFileName = tabsData.getTabTitle(currIndex).trim().toLowerCase();
+            String sourceFilePath = tabsData.getSourceFilePath(currIndex);
+            ConversionResult result;
+            if (!sourceFilePath.isEmpty()) {
+                result = converter.run(sourceMode, targetMode, sourceFilePath, targetFileName);
+            } else {
+                byte[] sourceData = tabsData.getSourceText(currIndex).getBytes();
+                result = converter.run(sourceMode, targetMode, sourceData, targetFileName);
+            }
+
+            tabsData.setTargetText(result.getData(), currIndex);
+            tabsData.setTargetFilePath(result.getTargetFilePath(), currIndex);
+
             logger.info("Conversion ended in tab " + currIndex);
         } catch (Exception e) {
             String errorMsg = "Conversion error in tab " + (currIndex + 1) +

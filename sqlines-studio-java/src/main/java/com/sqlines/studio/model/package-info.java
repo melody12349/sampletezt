@@ -22,10 +22,10 @@
  * <p>
  * Classes:
  * <p>
- * {@link com.sqlines.studio.model.Converter} - allows you to start conversion.
+ * {@link com.sqlines.studio.model.converter.ConverterImpl} - allows you to start conversion.
  * <p>
  *
- * {@link com.sqlines.studio.model.CoreProcess} - SQLines command-line program.
+ * {@link com.sqlines.studio.model.coreprocess.CoreProcessRunnerImp} - SQLines command-line program.
  * <p>
  *
  * {@link com.sqlines.studio.model.PropertiesLoader} -

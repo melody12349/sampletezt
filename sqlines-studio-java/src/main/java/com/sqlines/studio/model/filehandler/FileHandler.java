@@ -33,18 +33,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
- * Updates the tab data if the data in the opened files have been changed.
+ * Allows you to open files. Contains the list of recent files.
  * <p>
- * Contains the list of recent files.
+ * Updates the tab data if the data in the opened files have been changed.
  *
  * @apiNote Use {@link Runnable#run()} to start file verification.
  *
@@ -66,6 +64,7 @@ public class FileHandler implements Runnable, Serializable {
      * Updates the tab data if the data in the files have been changed.
      */
     @Override
+    @SuppressWarnings("BusyWait")
     public void run() {
         while (true) {
             try {
@@ -81,76 +80,103 @@ public class FileHandler implements Runnable, Serializable {
     }
 
     private synchronized void monitorFileChanged() {
+        monitorSourceFiles();
+        monitorTargetFiles();
+    }
+
+    private void monitorSourceFiles() {
         for (int i = 0; i < sourceFilesLastModified.size(); i++) {
             String filePath = tabsData.getSourceFilePath(i);
-            File file = new File(filePath);
             long lastModified = sourceFilesLastModified.get(i);
-
-            if (!filePath.isEmpty() && !file.exists() // If the file was deleted
-                    || file.lastModified() != lastModified) { // Or the file was modified
-                updateSourceFile(i);
-            }
-        }
-
-        for (int i = 0; i < targetFilesLastModified.size(); i++) {
-            String filePath = tabsData.getTargetFilePath(i);
-            File file = new File(filePath);
-            long lastModified = targetFilesLastModified.get(i);
-
-            if (!filePath.isEmpty() && !file.exists() // If the file was deleted
-                    || file.lastModified() != lastModified) { // Or the file was modified
-                updateTargetFile(i);
-            }
+            monitorSourceFile(i, filePath, lastModified);
         }
     }
 
-    private void updateSourceFile(int index) {
-        String filePath = tabsData.getSourceFilePath(index);
+    private void monitorSourceFile(int index, String path, long lastModified) {
+        Consumer<Runnable> update = action -> {
+            logger.info("Updating source file: " + path);
+            action.run();
+            logger.info("Source file updated: " + path);
+        };
+
+        if (fileWasDeleted(path)) {
+            update.accept(() -> resetSourceFile(index));
+        } else if (fileWasUpdated(path, lastModified)) {
+            update.accept(() -> updateSourceTabData(path, index));
+        }
+    }
+
+    private boolean fileWasDeleted(String filePath) {
         File file = new File(filePath);
+        return !filePath.isEmpty() && !file.exists();
+    }
 
-        // If the file was deleted
-        if (!file.exists() && !filePath.isEmpty()) {
-            tabsData.setSourceFilePath("", index);
-            sourceFilesLastModified.set(index, 0L);
-            return;
-        }
+    private void resetSourceFile(int index) {
+        tabsData.setSourceFilePath("", index);
+        sourceFilesLastModified.set(index, 0L);
+    }
 
+    private boolean fileWasUpdated(String filePath, long lastModified) {
+        File file = new File(filePath);
         if (!file.exists()) {
-            sourceFilesLastModified.set(index, 0L);
-            return;
+            return false;
         }
 
-        // If the file was modified
-        try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
-            String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            tabsData.setSourceText(text, index);
-            sourceFilesLastModified.set(index, file.lastModified());
+        return file.lastModified() != lastModified;
+    }
+
+    private void updateSourceTabData(String filePath, int tabIndex) {
+        try {
+            String data = readFromFile(filePath);
+            tabsData.setSourceText(data, tabIndex);
+
+            File file = new File(filePath);
+            sourceFilesLastModified.set(tabIndex, file.lastModified());
         } catch (Exception e) {
             logger.error("Updating source file: " + e.getMessage());
         }
     }
 
-    private void updateTargetFile(int index) {
-        String filePath = tabsData.getTargetFilePath(index);
-        File file = new File(filePath);
-
-        // If the file was deleted
-        if (!file.exists() && !filePath.isEmpty()) {
-            tabsData.setTargetFilePath("", index);
-            targetFilesLastModified.set(index, 0L);
-            return;
+    private String readFromFile(String path) throws IOException {
+        try (FileInputStream stream = new FileInputStream(path)) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
+    }
 
-        if (!file.exists()) {
-            targetFilesLastModified.set(index, 0L);
-            return;
+    private void monitorTargetFiles() {
+        for (int i = 0; i < targetFilesLastModified.size(); i++) {
+            String filePath = tabsData.getTargetFilePath(i);
+            long lastModified = targetFilesLastModified.get(i);
+            monitorTargetFile(i, filePath, lastModified);
         }
+    }
 
-        // If the file was modified
-        try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
-            String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            tabsData.setTargetText(text, index);
-            targetFilesLastModified.set(index, file.lastModified());
+    private void monitorTargetFile(int index, String path, long lastModified) {
+        Consumer<Runnable> update = action -> {
+            logger.info("Updating target file: " + path);
+            action.run();
+            logger.info("Target file updated: " + path);
+        };
+
+        if (fileWasDeleted(path)) {
+            update.accept(() -> resetTargetFile(index));
+        } else if (fileWasUpdated(path, lastModified)) {
+            update.accept(() -> updateTargetTabData(path, index));
+        }
+    }
+
+    private void resetTargetFile(int index) {
+        tabsData.setTargetFilePath("", index);
+        targetFilesLastModified.set(index, 0L);
+    }
+
+    private void updateTargetTabData(String filePath, int tabIndex) {
+        try {
+            String data = readFromFile(filePath);
+            tabsData.setTargetText(data, tabIndex);
+
+            File file = new File(filePath);
+            targetFilesLastModified.set(tabIndex, file.lastModified());
         } catch (Exception e) {
             logger.error("Updating target file: " + e.getMessage());
         }
@@ -161,39 +187,39 @@ public class FileHandler implements Runnable, Serializable {
      *
      * @param tabsData source of tab data to set
      */
-    public synchronized void setTabsData(@NotNull ObservableTabsData tabsData) {
+    public synchronized void setTabsData(ObservableTabsData tabsData) {
         this.tabsData = tabsData;
         tabsData.addTabsListener(this::tabsDataChanged);
     }
 
-    private synchronized void tabsDataChanged(@NotNull TabsChangeListener.Change change) {
+    private synchronized void tabsDataChanged(TabsChangeListener.Change change) {
         if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_ADDED) {
-            int tabIndex = change.getTabIndex();
-            addSourceFile(tabsData.getSourceFilePath(tabIndex), tabIndex);
-            addTargetFile(tabsData.getTargetFilePath(tabIndex), tabIndex);
+            handleTabAddEvent(change);
         } else if (change.getChangeType() == TabsChangeListener.Change.ChangeType.TAB_REMOVED) {
-            int tabIndex = change.getTabIndex();
-            removeSourceFile(tabIndex);
-            removeTargetFile(tabIndex);
+            handleTabCloseEvent(change);
         }
     }
 
-    private void addSourceFile(@NotNull String filePath, int index) {
+    private void handleTabAddEvent(TabsChangeListener.Change change) {
+        int tabIndex = change.getTabIndex();
+        addSourceFile(tabsData.getSourceFilePath(tabIndex), tabIndex);
+        addTargetFile(tabsData.getTargetFilePath(tabIndex), tabIndex);
+    }
+
+    private void handleTabCloseEvent(TabsChangeListener.Change change) {
+        int tabIndex = change.getTabIndex();
+        sourceFilesLastModified.remove(tabIndex);
+        targetFilesLastModified.remove(tabIndex);
+    }
+
+    private void addSourceFile(String filePath, int index) {
         File file = new File(filePath);
         sourceFilesLastModified.add(index, file.lastModified());
     }
 
-    private void addTargetFile(@NotNull String filePath, int index) {
+    private void addTargetFile(String filePath, int index) {
         File file = new File(filePath);
         targetFilesLastModified.add(index, file.lastModified());
-    }
-
-    private void removeSourceFile(int index) {
-        sourceFilesLastModified.remove(index);
-    }
-
-    private void removeTargetFile(int index) {
-        targetFilesLastModified.remove(index);
     }
 
     /**
@@ -211,51 +237,59 @@ public class FileHandler implements Runnable, Serializable {
      * @throws SecurityException if a security manager exists and its checkRead
      * method denies read access to the file.
      */
-    public synchronized void openSourceFiles(@NotNull List<File> files) throws IOException {
+    public synchronized void openSourceFiles(List<File> files) throws IOException {
         files.removeIf(File::isDirectory);
         for (File file : files) {
-            int currIndex = tabsData.getCurrTabIndex();
-            if (!tabsData.getSourceText(currIndex).isEmpty()) {
-                tabsData.openTab(currIndex + 1);
-                tabsData.setCurrTabIndex(currIndex + 1);
-                currIndex = tabsData.getCurrTabIndex();
-            }
-
-            try (FileInputStream stream = new FileInputStream(file.getAbsoluteFile())) {
-                String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-                tabsData.setSourceText(text, currIndex);
-                tabsData.setSourceFilePath(file.getAbsolutePath(), currIndex);
-                tabsData.setTabTitle(file.getName(), currIndex);
-                sourceFilesLastModified.set(currIndex, file.lastModified());
-
-                String lastOpenedDir = file.getParentFile().getAbsolutePath();
-                System.getProperties().setProperty("model.last-dir", lastOpenedDir);
-                changeRecentFiles(file);
-            }
+            openFile(file);
         }
     }
 
-    private void changeRecentFiles(@NotNull File file) {
+    private void openFile(File file) throws IOException {
+        int currIndex = tabsData.getCurrTabIndex();
+        if (!tabsData.getSourceText(currIndex).isEmpty()) {
+            tabsData.openTab(currIndex + 1);
+            tabsData.setCurrTabIndex(currIndex + 1);
+            currIndex = tabsData.getCurrTabIndex();
+        }
+
+        String text = readFromFile(file.getAbsolutePath());
+        tabsData.setSourceText(text, currIndex);
+        tabsData.setSourceFilePath(file.getAbsolutePath(), currIndex);
+        tabsData.setTabTitle(file.getName(), currIndex);
+        sourceFilesLastModified.set(currIndex, file.lastModified());
+
+        saveLastOpenedDir(file.getParentFile().getAbsolutePath());
+        changeRecentFiles(file);
+    }
+
+    private void saveLastOpenedDir(String dir) {
+        System.getProperties().setProperty("model.last-dir", dir);
+    }
+
+    private void changeRecentFiles(File file) {
         if (!recentFiles.contains(file)) {
             recentFiles.add(file);
-
-            RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
-                    RecentFilesChangeListener.Change.ChangeType.FILE_ADDED,
-                    file.getAbsolutePath(), recentFiles.indexOf(file)
-            );
-
-            recentFilesListeners.forEach(listener -> listener.onChange(change));
+            notifyRecentFileAddListeners(file.getAbsolutePath(), recentFiles.indexOf(file));
         } else {
             int from = recentFiles.indexOf(file);
             recentFiles.remove(file);
             recentFiles.add(0, file);
-
-            RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
-                    RecentFilesChangeListener.Change.ChangeType.FILE_MOVED,
-                    file.getAbsolutePath(), from, 0
-            );
-            recentFilesListeners.forEach(listener -> listener.onChange(change));
+            notifyRecentFileMoveListeners(file.getAbsolutePath(), from, 0);
         }
+    }
+
+    private void notifyRecentFileAddListeners(String filePath, int index) {
+        RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
+                RecentFilesChangeListener.Change.ChangeType.FILE_ADDED, filePath, index
+        );
+        recentFilesListeners.forEach(listener -> listener.onChange(change));
+    }
+
+    private void notifyRecentFileMoveListeners(String filePath, int movedFrom, int movedTo) {
+        RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
+                RecentFilesChangeListener.Change.ChangeType.FILE_MOVED, filePath, movedFrom, movedTo
+        );
+        recentFilesListeners.forEach(listener -> listener.onChange(change));
     }
 
     /**
@@ -267,25 +301,27 @@ public class FileHandler implements Runnable, Serializable {
      * @throws IndexOutOfBoundsException – if the index is out of range
      * (tabIndex < 0 || tabIndex >= {@link ObservableTabsData#countTabs()})
      * @throws IllegalStateException if there is no source file opened
-     * @throws FileNotFoundException if the file exists but is a directory rather than a regular file,
-     * does not exist but cannot be created, or cannot be opened for any other reason
      * @throws IOException if any I/O error occurred
      * @throws SecurityException if a security manager exists and its checkWrite method
      * denies write access to the file
      */
     public synchronized void saveSourceFile(int tabIndex) throws IOException {
-        String filePath = tabsData.getSourceFilePath(tabIndex);
-        File file = new File(filePath);
-        if (!file.exists()) {
-            String errorMsg = "File does not exist: " + file.getAbsolutePath();
-            throw new IllegalStateException(errorMsg);
-        }
+        File file = new File(tabsData.getSourceFilePath(tabIndex));
+        checkFilePresence(file);
+        writeToFile(file, tabsData.getSourceText(tabIndex));
+        tabsData.setTabTitle(file.getName(), tabIndex);
+        sourceFilesLastModified.set(tabIndex, file.lastModified());
+    }
 
+    private void checkFilePresence(File file) {
+        if (!file.exists()) {
+            throw new IllegalStateException("File does not exist: " + file.getAbsolutePath());
+        }
+    }
+
+    private void writeToFile(File file, String data) throws IOException {
         try (FileOutputStream stream = new FileOutputStream(file.getAbsoluteFile())) {
-            byte[] data = tabsData.getSourceText(tabIndex).getBytes();
-            stream.write(data);
-            tabsData.setTabTitle(file.getName(), tabIndex);
-            sourceFilesLastModified.set(tabIndex, file.lastModified());
+            stream.write(data.getBytes());
         }
     }
 
@@ -305,18 +341,10 @@ public class FileHandler implements Runnable, Serializable {
      * denies write access to the file
      */
     public synchronized void saveTargetFile(int tabIndex) throws IOException {
-        String filePath = tabsData.getTargetFilePath(tabIndex);
-        File file = new File(filePath);
-        if (!file.exists()) {
-            String errorMsg = "File does not exist: " + file.getAbsolutePath();
-            throw new IllegalStateException(errorMsg);
-        }
-
-        try (FileOutputStream stream = new FileOutputStream(file.getAbsoluteFile())) {
-            byte[] data = tabsData.getTargetText(tabIndex).getBytes();
-            stream.write(data);
-            targetFilesLastModified.set(tabIndex, file.lastModified());
-        }
+        File file = new File(tabsData.getTargetFilePath(tabIndex));
+        checkFilePresence(file);
+        writeToFile(file, tabsData.getTargetText(tabIndex));
+        targetFilesLastModified.set(tabIndex, file.lastModified());
     }
 
     /**
@@ -334,15 +362,12 @@ public class FileHandler implements Runnable, Serializable {
      * @throws SecurityException if a security manager exists and its checkWrite method
      * denies write access to the file
      */
-    public synchronized void saveSourceFileAs(int tabIndex, @NotNull String path) throws IOException  {
+    public synchronized void saveSourceFileAs(int tabIndex, String path) throws IOException  {
         File file = new File(path);
-        try (FileOutputStream stream = new FileOutputStream(file.getAbsoluteFile())) {
-            byte[] data = tabsData.getSourceText(tabIndex).getBytes();
-            stream.write(data);
-            tabsData.setSourceFilePath(path, tabIndex);
-            tabsData.setTabTitle(file.getName(), tabIndex);
-            sourceFilesLastModified.set(tabIndex, file.lastModified());
-        }
+        writeToFile(file, tabsData.getSourceText(tabIndex));
+        tabsData.setSourceFilePath(path, tabIndex);
+        tabsData.setTabTitle(file.getName(), tabIndex);
+        sourceFilesLastModified.set(tabIndex, file.lastModified());
     }
 
     /**
@@ -360,14 +385,11 @@ public class FileHandler implements Runnable, Serializable {
      * @throws SecurityException if a security manager exists and its checkWrite method
      * denies write access to the file
      */
-    public synchronized void saveTargetFileAs(int tabIndex, @NotNull String path) throws IOException  {
+    public synchronized void saveTargetFileAs(int tabIndex, String path) throws IOException  {
         File file = new File(path);
-        try (FileOutputStream stream = new FileOutputStream(file.getAbsoluteFile())) {
-            byte[] data = tabsData.getTargetText(tabIndex).getBytes();
-            stream.write(data);
-            tabsData.setTargetFilePath(path, tabIndex);
-            targetFilesLastModified.set(tabIndex, file.lastModified());
-        }
+        writeToFile(file, tabsData.getTargetText(tabIndex));
+        tabsData.setTargetFilePath(path, tabIndex);
+        targetFilesLastModified.set(tabIndex, file.lastModified());
     }
 
     /**
@@ -375,7 +397,7 @@ public class FileHandler implements Runnable, Serializable {
      *
      * @return the specified recent file
      */
-    public @NotNull String getRecentFile(int index) {
+    public String getRecentFile(int index) {
         return recentFiles.get(index).getAbsolutePath();
     }
 
@@ -385,13 +407,14 @@ public class FileHandler implements Runnable, Serializable {
     public void clearRecentFiles() {
         Stream<String> paths = recentFiles.stream().map(File::getAbsolutePath);
         recentFiles.clear();
+        paths.forEach(this::notifyRecentFileListenersOfDelete);
+    }
 
-        paths.forEach(path -> {
-            RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
-                    RecentFilesChangeListener.Change.ChangeType.FILE_REMOVED, path, 0
-            );
-            recentFilesListeners.forEach(listener -> listener.onChange(change));
-        });
+    private void notifyRecentFileListenersOfDelete(String path) {
+        RecentFilesChangeListener.Change change = new RecentFilesChangeListener.Change(
+                RecentFilesChangeListener.Change.ChangeType.FILE_REMOVED, path, 0
+        );
+        recentFilesListeners.forEach(listener -> listener.onChange(change));
     }
 
     /**
@@ -407,7 +430,7 @@ public class FileHandler implements Runnable, Serializable {
      *
      * @param listener the listener to register
      */
-    public void addRecentFileListener(@NotNull RecentFilesChangeListener listener) {
+    public void addRecentFileListener(RecentFilesChangeListener listener) {
         recentFilesListeners.add(listener);
     }
 
@@ -432,13 +455,9 @@ public class FileHandler implements Runnable, Serializable {
         return Objects.hash(sourceFilesLastModified, targetFilesLastModified, recentFiles);
     }
 
-    private synchronized void readObject(@NotNull ObjectInputStream stream)
+    private synchronized void readObject(ObjectInputStream stream)
             throws ClassNotFoundException, IOException {
-        sourceFilesLastModified = new ArrayList<>();
-        targetFilesLastModified = new ArrayList<>();
-        recentFiles = new ArrayList<>();
-        recentFilesListeners = new ArrayList<>();
-
+        initFields();
         int sourceFilesNumber = stream.readInt();
         for (int i = 0 ; i < sourceFilesNumber; i++) {
             Long data = (Long) stream.readObject();
@@ -458,7 +477,14 @@ public class FileHandler implements Runnable, Serializable {
         }
     }
 
-    private synchronized void writeObject(@NotNull ObjectOutputStream stream) throws IOException {
+    private void initFields() {
+        sourceFilesLastModified = new ArrayList<>();
+        targetFilesLastModified = new ArrayList<>();
+        recentFiles = new ArrayList<>();
+        recentFilesListeners = new ArrayList<>();
+    }
+
+    private synchronized void writeObject(ObjectOutputStream stream) throws IOException {
         stream.writeInt(sourceFilesLastModified.size());
         for (Long data : sourceFilesLastModified) {
             stream.writeObject(data);

@@ -32,8 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Contains a synchronized observable list with the data of opened tabs.
  * <p>
@@ -47,43 +45,6 @@ import org.jetbrains.annotations.NotNull;
  * @see FilePathChangeListener
  */
 public class ObservableTabsData implements Serializable {
-
-    private static class TabData implements Serializable {
-        String tabTitle = "";
-        String sourceText = "";
-        String targetText = "";
-        String sourceMode = "";
-        String targetMode = "";
-        String sourceFilePath = "";
-        String targetFilePath = "";
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) {
-                return true;
-            }
-
-            if (other == null || getClass() != other.getClass()) {
-                return false;
-            }
-
-            TabData data = (TabData) other;
-            return Objects.equals(tabTitle, data.tabTitle)
-                    && Objects.equals(sourceText, data.sourceText)
-                    && Objects.equals(targetText, data.targetText)
-                    && Objects.equals(sourceMode, data.sourceMode)
-                    && Objects.equals(targetMode, data.targetMode)
-                    && Objects.equals(sourceFilePath, data.sourceFilePath)
-                    && Objects.equals(targetFilePath, data.targetFilePath);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(tabTitle, sourceText, targetText,
-                    sourceMode, targetMode, sourceFilePath, targetFilePath);
-        }
-    }
-
     private static final long serialVersionUID = 498374478;
 
     private List<TabData> tabsData = new LinkedList<>();
@@ -110,14 +71,9 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void openTab(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
         checkRange(tabIndex, 0, tabsData.size() + 1);
-
         tabsData.add(tabIndex, new TabData());
-        TabsChangeListener.Change added = new TabsChangeListener.Change(
-                TabsChangeListener.Change.ChangeType.TAB_ADDED, tabIndex
-        );
-        tabsListeners.forEach(listener -> listener.onChange(added));
+        notifyTabAddListeners(tabIndex);
     }
 
     private void checkRange(int tabIndex, int from, int to) {
@@ -127,6 +83,13 @@ public class ObservableTabsData implements Serializable {
                     + tabIndex + " provided";
             throw new IndexOutOfBoundsException(errorMsg);
         }
+    }
+
+    private void notifyTabAddListeners(int tabIndex) {
+        TabsChangeListener.Change added = new TabsChangeListener.Change(
+                TabsChangeListener.Change.ChangeType.TAB_ADDED, tabIndex
+        );
+        tabsListeners.forEach(listener -> listener.onChange(added));
     }
 
     /**
@@ -140,10 +103,12 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void removeTab(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.remove(tabIndex);
+        notifyTabRemoveListeners(tabIndex);
+    }
+
+    private void notifyTabRemoveListeners(int tabIndex) {
         TabsChangeListener.Change removed = new TabsChangeListener.Change(
                 TabsChangeListener.Change.ChangeType.TAB_REMOVED, tabIndex
         );
@@ -161,10 +126,7 @@ public class ObservableTabsData implements Serializable {
         currTabIndex = -1;
 
         for (int i = 0; i < tabsNumber; i++) {
-            TabsChangeListener.Change removed = new TabsChangeListener.Change(
-                    TabsChangeListener.Change.ChangeType.TAB_REMOVED, 0
-            );
-            tabsListeners.forEach(listener -> listener.onChange(removed));
+            notifyTabRemoveListeners(i);
         }
     }
 
@@ -192,8 +154,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized @NotNull String getTabTitle(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getTabTitle(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).tabTitle;
     }
@@ -208,8 +169,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized @NotNull String getSourceText(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getSourceText(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).sourceText;
     }
@@ -224,8 +184,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized  @NotNull String getTargetText(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getTargetText(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).targetText;
     }
@@ -240,8 +199,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized @NotNull String getSourceMode(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getSourceMode(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).sourceMode;
     }
@@ -256,8 +214,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized @NotNull String getTargetMode(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getTargetMode(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).targetMode;
     }
@@ -272,8 +229,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized @NotNull String getSourceFilePath(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getSourceFilePath(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).sourceFilePath;
     }
@@ -288,8 +244,7 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized @NotNull String getTargetFilePath(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized String getTargetFilePath(int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
         return tabsData.get(tabIndex).targetFilePath;
     }
@@ -305,11 +260,9 @@ public class ObservableTabsData implements Serializable {
      * (index < 0 || index >= countTabs())
      */
     public synchronized void setCurrTabIndex(int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
         checkRange(tabIndex, 0, tabsData.size());
-
         currTabIndex = tabIndex;
-        tabIndexListeners.forEach(listener -> listener.changed(currTabIndex));
+        tabIndexListeners.forEach(listener -> listener.changed(tabIndex));
     }
 
     /**
@@ -323,10 +276,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setTabTitle(@NotNull String title, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setTabTitle(String title, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).tabTitle = title;
         titleListeners.forEach(listener -> listener.changed(title, tabIndex));
     }
@@ -342,10 +293,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setSourceText(@NotNull String text, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setSourceText(String text, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).sourceText = text;
         sourceTextListeners.forEach(listener -> listener.changed(text, tabIndex));
     }
@@ -361,10 +310,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setTargetText(@NotNull String text, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setTargetText(String text, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).targetText = text;
         targetTextListeners.forEach(listener -> listener.changed(text, tabIndex));
     }
@@ -380,10 +327,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setSourceMode(@NotNull String mode, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setSourceMode(String mode, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).sourceMode = mode;
         sourceModeListeners.forEach(listener -> listener.changed(mode, tabIndex));
     }
@@ -399,10 +344,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setTargetMode(@NotNull String mode, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setTargetMode(String mode, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).targetMode = mode;
         targetModeListeners.forEach(listener -> listener.changed(mode, tabIndex));
     }
@@ -418,10 +361,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setSourceFilePath(@NotNull String filePath, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setSourceFilePath(String filePath, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).sourceFilePath = filePath;
         sourcePathListeners.forEach(listener -> listener.changed(filePath, tabIndex));
     }
@@ -437,10 +378,8 @@ public class ObservableTabsData implements Serializable {
      * @throws IndexOutOfBoundsException if the index is out of range
      * (index < 0 || index >= countTabs())
      */
-    public synchronized void setTargetFilePath(@NotNull String filePath, int tabIndex) {
-        // Throws exception if tabIndex is out of valid range
+    public synchronized void setTargetFilePath(String filePath, int tabIndex) {
         checkRange(tabIndex, 0, tabsData.size());
-
         tabsData.get(tabIndex).targetFilePath = filePath;
         targetPathListeners.forEach(listener -> listener.changed(filePath, tabIndex));
     }
@@ -451,7 +390,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addTabsListener(@NotNull TabsChangeListener listener) {
+    public synchronized void addTabsListener(TabsChangeListener listener) {
         tabsListeners.add(listener);
     }
 
@@ -460,7 +399,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeTabsListener(@NotNull TabsChangeListener listener) {
+    public synchronized void removeTabsListener(TabsChangeListener listener) {
         tabsListeners.remove(listener);
     }
 
@@ -470,7 +409,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addTabIndexListener(@NotNull TabIndexChangeListener listener) {
+    public synchronized void addTabIndexListener(TabIndexChangeListener listener) {
         tabIndexListeners.add(listener);
     }
 
@@ -479,7 +418,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeTabIndexListener(@NotNull TabIndexChangeListener listener) {
+    public synchronized void removeTabIndexListener(TabIndexChangeListener listener) {
         tabIndexListeners.remove(listener);
     }
 
@@ -489,7 +428,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addTabTitleListener(@NotNull TabTitleChangeListener listener) {
+    public synchronized void addTabTitleListener(TabTitleChangeListener listener) {
         titleListeners.add(listener);
     }
 
@@ -498,7 +437,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeTabTitleListener(@NotNull TabTitleChangeListener listener) {
+    public synchronized void removeTabTitleListener(TabTitleChangeListener listener) {
         titleListeners.remove(listener);
     }
 
@@ -508,7 +447,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addSourceModeListener(@NotNull ModeChangeListener listener) {
+    public synchronized void addSourceModeListener(ModeChangeListener listener) {
         sourceModeListeners.add(listener);
     }
 
@@ -517,7 +456,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeSourceModeListener(@NotNull ModeChangeListener listener) {
+    public synchronized void removeSourceModeListener(ModeChangeListener listener) {
         sourceModeListeners.remove(listener);
     }
 
@@ -527,7 +466,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addTargetModeListener(@NotNull ModeChangeListener listener) {
+    public synchronized void addTargetModeListener(ModeChangeListener listener) {
         targetModeListeners.add(listener);
     }
 
@@ -536,7 +475,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeTargetModeListener(@NotNull ModeChangeListener listener) {
+    public synchronized void removeTargetModeListener(ModeChangeListener listener) {
         targetModeListeners.remove(listener);
     }
 
@@ -546,7 +485,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addSourceTextListener(@NotNull TextChangeListener listener) {
+    public synchronized void addSourceTextListener(TextChangeListener listener) {
         sourceTextListeners.add(listener);
     }
 
@@ -555,7 +494,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeSourceTextListener(@NotNull TextChangeListener listener) {
+    public synchronized void removeSourceTextListener(TextChangeListener listener) {
         sourceTextListeners.remove(listener);
     }
 
@@ -565,7 +504,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addTargetTextListener(@NotNull TextChangeListener listener) {
+    public synchronized void addTargetTextListener(TextChangeListener listener) {
         targetTextListeners.add(listener);
     }
 
@@ -574,7 +513,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to remove
      */
-    public synchronized void removeTargetTextListener(@NotNull TextChangeListener listener) {
+    public synchronized void removeTargetTextListener(TextChangeListener listener) {
         targetTextListeners.remove(listener);
     }
 
@@ -584,7 +523,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addSourceFilePathListener(@NotNull FilePathChangeListener listener) {
+    public synchronized void addSourceFilePathListener(FilePathChangeListener listener) {
         sourcePathListeners.add(listener);
     }
 
@@ -594,7 +533,7 @@ public class ObservableTabsData implements Serializable {
      *
      * @param listener the listener to register
      */
-    public synchronized void addTargetFilePathListener(@NotNull FilePathChangeListener listener) {
+    public synchronized void addTargetFilePathListener(FilePathChangeListener listener) {
         targetPathListeners.add(listener);
     }
 
@@ -617,8 +556,19 @@ public class ObservableTabsData implements Serializable {
         return Objects.hash(tabsData, currTabIndex);
     }
     
-    private synchronized void readObject(@NotNull ObjectInputStream stream)
+    private synchronized void readObject(ObjectInputStream stream)
             throws ClassNotFoundException, IOException {
+        initFields();
+        int tabsNumber = stream.readInt();
+        for (int i = 0; i < tabsNumber; i++) {
+            TabData data = (TabData) stream.readObject();
+            tabsData.add(data);
+        }
+
+        currTabIndex = stream.readInt();
+    }
+
+    private void initFields() {
         tabsListeners = new ArrayList<>(5);
         tabIndexListeners = new ArrayList<>(5);
         titleListeners = new ArrayList<>(5);
@@ -630,22 +580,63 @@ public class ObservableTabsData implements Serializable {
         targetPathListeners = new ArrayList<>(5);
         tabsData = new LinkedList<>();
         currTabIndex = -1;
-
-        int tabsNumber = stream.readInt();
-        for (int i = 0; i < tabsNumber; i++) {
-            TabData data = (TabData) stream.readObject();
-            tabsData.add(data);
-        }
-
-        currTabIndex = stream.readInt();
     }
 
-    private synchronized void writeObject(@NotNull ObjectOutputStream stream) throws IOException {
+    private synchronized void writeObject(ObjectOutputStream stream) throws IOException {
         stream.writeInt(tabsData.size());
         for (TabData data : tabsData) {
             stream.writeObject(data);
         }
 
         stream.writeInt(currTabIndex);
+    }
+
+    private static class TabData implements Serializable {
+        private String tabTitle = "";
+        private String sourceText = "";
+        private String targetText = "";
+        private String sourceMode = "";
+        private String targetMode = "";
+        private String sourceFilePath = "";
+        private String targetFilePath = "";
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+
+            if (other == null || getClass() != other.getClass()) {
+                return false;
+            }
+
+            TabData data = (TabData) other;
+            return Objects.equals(tabTitle, data.tabTitle)
+                    && Objects.equals(sourceText, data.sourceText)
+                    && Objects.equals(targetText, data.targetText)
+                    && Objects.equals(sourceMode, data.sourceMode)
+                    && Objects.equals(targetMode, data.targetMode)
+                    && Objects.equals(sourceFilePath, data.sourceFilePath)
+                    && Objects.equals(targetFilePath, data.targetFilePath);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tabTitle, sourceText, targetText,
+                    sourceMode, targetMode, sourceFilePath, targetFilePath);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getName() + "{" +
+                    "tabTitle='" + tabTitle + '\'' +
+                    ", sourceText='" + sourceText + '\'' +
+                    ", targetText='" + targetText + '\'' +
+                    ", sourceMode='" + sourceMode + '\'' +
+                    ", targetMode='" + targetMode + '\'' +
+                    ", sourceFilePath='" + sourceFilePath + '\'' +
+                    ", targetFilePath='" + targetFilePath + '\'' +
+                    '}';
+        }
     }
 }

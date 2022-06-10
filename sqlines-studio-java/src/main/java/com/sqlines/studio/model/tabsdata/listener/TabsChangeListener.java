@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.model.tabsdata.listener;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A TabsChangeListener is notified whenever the list of tabs changes.
  */
@@ -29,7 +27,7 @@ public interface TabsChangeListener {
      *
      * @param change an object representing the change that was done
      */
-    void onChange(@NotNull Change change);
+    void onChange(Change change);
 
     /**
      * Represents a report of changes done to the list of tabs.
@@ -52,10 +50,9 @@ public interface TabsChangeListener {
          * @param changeType a type of change that occurred in the list of tabs
          * @param tabIndex a tab index where the change occurred
          *
-         * @apiNote Suitable for the {@link ChangeType#TAB_ADDED} and the
-         * {@link ChangeType#TAB_REMOVED} change types.
+         * @apiNote Suitable for the TAB_ADDED and the TAB_REMOVED change types.
          */
-        public Change(@NotNull ChangeType changeType, int tabIndex) {
+        public Change(ChangeType changeType, int tabIndex) {
             this.changeType = changeType;
             this.tabIndex = tabIndex;
         }
@@ -63,7 +60,7 @@ public interface TabsChangeListener {
         /**
          * @return the type of change that occurred in the list of tabs
          */
-        public @NotNull ChangeType getChangeType() {
+        public ChangeType getChangeType() {
             return changeType;
         }
 

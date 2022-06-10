@@ -16,8 +16,7 @@
 
 package com.sqlines.studio.model.license;
 
-import com.sqlines.studio.model.CoreProcess;
-
+import com.sqlines.studio.model.coreprocess.CoreProcessRunner;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,11 +29,11 @@ import static org.hamcrest.CoreMatchers.*;
 
 public class LicenseTest {
     private License license;
-    private CoreProcess coreProcess;
+    private CoreProcessRunner coreProcess;
 
     @Before
     public void setUp() {
-        coreProcess = mock(CoreProcess.class);
+        coreProcess = mock(CoreProcessRunner.class);
 
         String path = getClass().getResource("/license.txt").getPath();
         path = path.substring(0, path.lastIndexOf("/"));
@@ -44,20 +43,20 @@ public class LicenseTest {
     }
 
     @Test
-    public void isActiveShouldReturnTrueWhenLicenseIsActive() {
-        when(coreProcess.getOutput()).thenReturn("LICENSED TO");
+    public void isActiveShouldReturnTrueWhenLicenseIsActive() throws IOException {
+        when(coreProcess.runAndWait(any())).thenReturn("LICENSED TO");
         assertThat(license.isActive(), equalTo(true));
     }
 
     @Test
-    public void isActiveShouldReturnFalseWhenLicenseIsNotActive() {
-        when(coreProcess.getOutput()).thenReturn("FOR EVALUATION USE ONLY");
+    public void isActiveShouldReturnFalseWhenLicenseIsNotActive() throws IOException {
+        when(coreProcess.runAndWait(any())).thenReturn("FOR EVALUATION USE ONLY");
         assertThat(license.isActive(), equalTo(false));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldNotifyWhenLicenseStatusChanges() throws IOException {
-        when(coreProcess.getOutput()).thenReturn("FOR EVALUATION USE ONLY");
+        when(coreProcess.runAndWait(any())).thenReturn("FOR EVALUATION USE ONLY");
 
         AtomicBoolean notified = new AtomicBoolean(false);
         license.addLicenseListener(isActive -> {

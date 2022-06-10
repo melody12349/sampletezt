@@ -16,8 +16,6 @@
 
 package com.sqlines.studio.model.tabsdata.listener;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A TabTitleChangeListener is notified whenever the title of any tab changes.
  */
@@ -29,5 +27,5 @@ public interface TabTitleChangeListener {
      * @param newTitle updated tab title
      * @param tabIndex the index of the tab where the title was changed
      */
-    void changed(@NotNull String newTitle, int tabIndex);
+    void changed(String newTitle, int tabIndex);
 }
