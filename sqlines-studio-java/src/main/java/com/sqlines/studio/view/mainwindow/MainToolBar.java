@@ -33,8 +33,6 @@ import javafx.scene.text.Text;
 import java.net.URL;
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Horizontal bar containing icons used to select the application's most frequently used tools.
  * <p>
@@ -179,7 +177,7 @@ class MainToolBar extends ToolBar {
      *
      * @throws IllegalStateException if none of the source modes is currently selected
      */
-    public @NotNull String getSourceMode() {
+    public String getSourceMode() {
         String currMode = sourceModesBox.getSelectionModel().getSelectedItem();
         if (currMode == null) {
             throw new IllegalStateException("No source mode selected");
@@ -193,7 +191,7 @@ class MainToolBar extends ToolBar {
      *
      * @throws IllegalStateException if none of the target modes is currently selected
      */
-    public @NotNull String getTargetMode() {
+    public String getTargetMode() {
         String currMode = targetModesBox.getSelectionModel().getSelectedItem();
         if (currMode == null) {
             throw new IllegalStateException("No target mode selected");
@@ -211,7 +209,7 @@ class MainToolBar extends ToolBar {
      *
      * @throws IllegalArgumentException if the list of source modes is empty
      */
-    public void setSourceModes(@NotNull List<String> modes) {
+    public void setSourceModes(List<String> modes) {
         if (modes.isEmpty()) {
             throw new IllegalArgumentException("List of source modes is empty");
         }
@@ -229,7 +227,7 @@ class MainToolBar extends ToolBar {
      *
      * @throws IllegalArgumentException if the list of target modes is empty
      */
-    public void setTargetModes(@NotNull List<String> modes) {
+    public void setTargetModes(List<String> modes) {
         if (modes.isEmpty()) {
             throw new IllegalArgumentException("List of target modes is empty");
         }
@@ -245,7 +243,7 @@ class MainToolBar extends ToolBar {
      *
      * @throws IllegalArgumentException if such a mode does not exist
      */
-    public void selectSourceMode(@NotNull String mode) {
+    public void selectSourceMode(String mode) {
         if (!sourceModesBox.getItems().contains(mode)) {
             throw new IllegalArgumentException("Such a mode does not exist: " + mode);
         }
@@ -260,7 +258,7 @@ class MainToolBar extends ToolBar {
      *
      * @throws IllegalArgumentException if such a mode does not exist
      */
-    public void selectTargetMode(@NotNull String mode) {
+    public void selectTargetMode(String mode) {
         if (!targetModesBox.getItems().contains(mode)) {
             throw new IllegalArgumentException("Such a mode does not exist: " + mode);
         }
@@ -274,7 +272,7 @@ class MainToolBar extends ToolBar {
      *
      * @param listener the listener to register
      */
-    public void addSourceModeListener(@NotNull ChangeListener<String> listener) {
+    public void addSourceModeListener(ChangeListener<String> listener) {
        sourceModesBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
@@ -284,7 +282,7 @@ class MainToolBar extends ToolBar {
      *
      * @param listener the listener to register
      */
-    public void addTargetModeListener(@NotNull ChangeListener<String> listener) {
+    public void addTargetModeListener(ChangeListener<String> listener) {
         targetModesBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
@@ -294,7 +292,7 @@ class MainToolBar extends ToolBar {
      *
      * @param listener the listener to register
      */
-    public void addFocusListener(@NotNull ChangeListener<Boolean> listener) {
+    public void addFocusListener(ChangeListener<Boolean> listener) {
         newTabButton.focusedProperty().addListener(listener);
         openFileButton.focusedProperty().addListener(listener);
         saveFileButton.focusedProperty().addListener(listener);
@@ -308,7 +306,7 @@ class MainToolBar extends ToolBar {
      *
      * @param action the action to register
      */
-    public void setOnNewTabAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnNewTabAction(EventHandler<ActionEvent> action) {
         newTabButton.setOnAction(action);
     }
 
@@ -317,7 +315,7 @@ class MainToolBar extends ToolBar {
      *
      * @param action the action to register
      */
-    public void setOnOpenFileAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnOpenFileAction(EventHandler<ActionEvent> action) {
         openFileButton.setOnAction(action);
     }
 
@@ -326,7 +324,7 @@ class MainToolBar extends ToolBar {
      *
      * @param action the action to register
      */
-    public void setOnSaveFileAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnSaveFileAction(EventHandler<ActionEvent> action) {
         saveFileButton.setOnAction(action);
     }
 
@@ -335,7 +333,7 @@ class MainToolBar extends ToolBar {
      *
      * @param action the action to register
      */
-    public void setOnRunAction(@NotNull EventHandler<ActionEvent> action) {
+    public void setOnRunAction(EventHandler<ActionEvent> action) {
         runButton.setOnAction(action);
     }
 }

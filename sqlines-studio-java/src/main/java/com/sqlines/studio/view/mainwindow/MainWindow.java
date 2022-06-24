@@ -872,7 +872,7 @@ public class MainWindow extends AbstractWindow implements MainWindowView, MainWi
     }
 
     @Override
-    public void setOnTabCloseAction(EventHandler<WindowEvent> action) {
+    public void setOnCloseAction(EventHandler<WindowEvent> action) {
         setOnCloseRequest(action);
     }
 

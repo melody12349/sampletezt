@@ -38,6 +38,7 @@ import java.io.ObjectOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -95,7 +96,7 @@ public class Application extends javafx.application.Application {
         settingsWindow.setDarkStylesheets(ResourceLoader.loadSettingDarkStyles());
 
         SettingsPresenter settingsPresenter = new SettingsPresenter(
-                license, settingsWindow, mainWindow, Arrays.asList(mainWindow, settingsWindow)
+                license, settingsWindow, mainWindow, List.of(mainWindow, settingsWindow)
         );
 
         MainWindowPresenter mainPresenter = new MainWindowPresenter(

@@ -77,7 +77,7 @@ public interface BaseView {
      *
      * @throws UnsupportedOperationException if the requested operation is not supported
      */
-    default void setOnTabCloseAction(EventHandler<WindowEvent> action) {
+    default void setOnCloseAction(EventHandler<WindowEvent> action) {
         throw new UnsupportedOperationException();
     }
 }
