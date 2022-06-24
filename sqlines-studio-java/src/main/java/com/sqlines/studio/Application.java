@@ -33,11 +33,11 @@ import com.sqlines.studio.view.settings.SettingsWindow;
 
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -49,8 +49,8 @@ public class Application extends javafx.application.Application {
     private ObservableTabsData tabsData;
     private FileHandler fileHandler;
     private MainWindow mainWindow;
-    private Thread fileChecker;
-    private Thread licenseChecker;
+    private Thread fileCheckingThread;
+    private Thread licenseCheckingThread;
     private Thread checkpointThread;
 
     public static void main(String[] args) {
@@ -59,6 +59,11 @@ public class Application extends javafx.application.Application {
 
     @Override
     public void init() {
+        loadProperties();
+        loadLastState();
+    }
+
+    private void loadProperties() {
         try {
             logger.info("Loading properties");
             PropertiesLoader.loadProperties();
@@ -67,11 +72,14 @@ public class Application extends javafx.application.Application {
             logger.warn("Properties loading failed: " + e.getMessage());
             PropertiesLoader.setDefaults();
         }
+    }
 
+    private void loadLastState() {
         String saveSession = System.getProperty("model.save-session");
         if (saveSession.equals("enabled")) {
             logger.info("Loading last state");
-            deserializeObjects();
+            deserializeModel();
+            logger.info("Last state loaded");
         } else {
             tabsData = new ObservableTabsData();
             fileHandler = new FileHandler();
@@ -79,11 +87,34 @@ public class Application extends javafx.application.Application {
         }
     }
 
+    private void deserializeModel() {
+        try (ObjectInputStream tabsDataStream = getTabsDataInStream();
+             ObjectInputStream fileHandlerStream = getFileHandlerInStream()) {
+            tabsData = (ObservableTabsData) tabsDataStream.readObject();
+            fileHandler = (FileHandler) fileHandlerStream.readObject();
+        } catch (Exception e) {
+            logger.warn("Deserialization error: " + e.getMessage());
+            tabsData = new ObservableTabsData();
+            fileHandler = new FileHandler();
+        } finally {
+            fileHandler.setTabsData(tabsData);
+        }
+    }
+
+    private ObjectInputStream getTabsDataInStream() throws IOException  {
+        String tabsDataPath = System.getProperty("java.io.tmpdir") + "sqlines-tabsdata.serial";
+        return new ObjectInputStream(new FileInputStream(tabsDataPath));
+    }
+
+    private ObjectInputStream getFileHandlerInStream() throws IOException {
+        String fileHandlerPath = System.getProperty("java.io.tmpdir") + "sqlines-filehandler.serial";
+        return new ObjectInputStream(new FileInputStream(fileHandlerPath));
+    }
+
     @Override
     public void start(Stage primaryStage) throws Exception {
         CoreProcessRunner coreProcess = new CoreProcessRunnerImp();
-        CmdModes modes = new CmdModes(ResourceLoader.loadCmdModes());
-        Converter converter = new ConverterImpl(modes, coreProcess);
+        Converter converter = new ConverterImpl(new CmdModes(ResourceLoader.loadCmdModes()), coreProcess);
         License license = new License(coreProcess);
 
         mainWindow = new MainWindow();
@@ -98,60 +129,29 @@ public class Application extends javafx.application.Application {
         SettingsPresenter settingsPresenter = new SettingsPresenter(
                 license, settingsWindow, mainWindow, List.of(mainWindow, settingsWindow)
         );
-
         MainWindowPresenter mainPresenter = new MainWindowPresenter(
                 tabsData, fileHandler, converter, mainWindow
         );
 
-        fileChecker = new Thread(fileHandler, "FileChecker");
-        fileChecker.setDaemon(true);
-        fileChecker.start();
+        fileCheckingThread = new Thread(fileHandler, "fileCheckingThread");
+        fileCheckingThread.setDaemon(true);
+        fileCheckingThread.start();
 
-        licenseChecker = new Thread(license, "LicenseChecker");
-        licenseChecker.setDaemon(true);
-        licenseChecker.start();
+        licenseCheckingThread = new Thread(license, "LicenseCheckingThread");
+        licenseCheckingThread.setDaemon(true);
+        licenseCheckingThread.start();
 
         checkpointThread = new Thread(this::runCheckpointLoop, "CheckpointThread");
         checkpointThread.setDaemon(true);
         checkpointThread.start();
     }
 
-    @Override
-    public void stop() throws Exception {
-        try {
-            fileChecker.interrupt();
-            licenseChecker.interrupt();
-            checkpointThread.interrupt();
-
-            int tabsNumber = tabsData.countTabs();
-            for (int i = 0; i < tabsNumber; i++) {
-                if (!tabsData.getSourceFilePath(i).isEmpty()) {
-                    fileHandler.saveSourceFile(i);
-                }
-
-                if (!tabsData.getTargetFilePath(i).isEmpty()) {
-                    fileHandler.saveTargetFile(i);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("stop() - " + e.getMessage());
-        }
-
-        logger.info("Saving setting");
-        saveUISettings();
-        PropertiesLoader.saveProperties();
-        logger.info("Settings saved");
-
-        logger.info("Saving last state");
-        serializeObjects();
-        logger.info("Last state saved");
-    }
-
+    @SuppressWarnings("BusyWait")
     private void runCheckpointLoop() {
         while (true) {
             try {
                 Thread.sleep(40000);
-                serializeObjects();
+                serializeModel();
                 logger.info("Checkpoint made");
             } catch (InterruptedException e) {
                 break;
@@ -161,31 +161,62 @@ public class Application extends javafx.application.Application {
         }
     }
 
-    private void serializeObjects() {
-        String tabsDataPath = System.getProperty("java.io.tmpdir") + "sqlines-tabsdata.serial";
-        String fileHandlerPath = System.getProperty("java.io.tmpdir") + "sqlines-filehandler.serial";
-        try (ObjectOutputStream tabsDataStream = new ObjectOutputStream(new FileOutputStream(tabsDataPath));
-             ObjectOutputStream fileHandlerStream = new ObjectOutputStream(new FileOutputStream(fileHandlerPath))) {
+    private void serializeModel() {
+        try (ObjectOutputStream tabsDataStream = getTabsDataOutStream();
+             ObjectOutputStream fileHandlerStream = getFileHandlerOutStream()) {
             tabsDataStream.writeObject(tabsData);
             fileHandlerStream.writeObject(fileHandler);
         } catch (Exception e) {
-            logger.warn("init() - Serialization error: " + e.getMessage());
+            logger.warn("Serialization error: " + e.getMessage());
         }
     }
 
-    private void deserializeObjects() {
+    private ObjectOutputStream getTabsDataOutStream() throws IOException {
         String tabsDataPath = System.getProperty("java.io.tmpdir") + "sqlines-tabsdata.serial";
+        return new ObjectOutputStream(new FileOutputStream(tabsDataPath));
+    }
+
+    private ObjectOutputStream getFileHandlerOutStream() throws IOException {
         String fileHandlerPath = System.getProperty("java.io.tmpdir") + "sqlines-filehandler.serial";
-        try (ObjectInputStream tabsDataStream = new ObjectInputStream(new FileInputStream(tabsDataPath));
-             ObjectInputStream fileHandlerStream = new ObjectInputStream(new FileInputStream(fileHandlerPath))) {
-            tabsData = (ObservableTabsData) tabsDataStream.readObject();
-            fileHandler = (FileHandler) fileHandlerStream.readObject();
+        return new ObjectOutputStream(new FileOutputStream(fileHandlerPath));
+    }
+
+    @Override
+    public void stop() {
+        try {
+            fileCheckingThread.interrupt();
+            licenseCheckingThread.interrupt();
+            checkpointThread.interrupt();
+
+            saveFiles();
+            saveProperties();
+            saveLastState();
         } catch (Exception e) {
-            logger.warn("Deserialization error: " + e.getMessage());
-            tabsData = new ObservableTabsData();
-            fileHandler = new FileHandler();
-        } finally {
-            fileHandler.setTabsData(tabsData);
+            logger.error(e.getMessage());
+        }
+    }
+
+    private void saveFiles() throws IOException {
+        int tabsNumber = tabsData.countTabs();
+        for (int i = 0; i < tabsNumber; i++) {
+            if (!tabsData.getSourceFilePath(i).isEmpty()) {
+                fileHandler.saveSourceFile(i);
+            }
+
+            if (!tabsData.getTargetFilePath(i).isEmpty()) {
+                fileHandler.saveTargetFile(i);
+            }
+        }
+    }
+
+    private void saveProperties() {
+        try {
+            logger.info("Saving properties");
+            saveUISettings();
+            PropertiesLoader.saveProperties();
+            logger.info("Properties saved");
+        } catch (Exception e) {
+            logger.warn("Properties saving failed: " + e.getMessage());
         }
     }
 
@@ -195,5 +226,11 @@ public class Application extends javafx.application.Application {
         System.setProperty("view.pos.x", String.valueOf(mainWindow.getX()));
         System.setProperty("view.pos.y", String.valueOf(mainWindow.getY()));
         System.setProperty("view.isMaximized", String.valueOf(mainWindow.isMaximized()));
+    }
+
+    private void saveLastState() {
+        logger.info("Saving last state");
+        serializeModel();
+        logger.info("Last state saved");
     }
 }
