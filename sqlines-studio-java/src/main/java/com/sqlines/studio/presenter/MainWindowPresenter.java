@@ -150,11 +150,15 @@ public class MainWindowPresenter {
     }
 
     private void modelSourceModeChanged(String newMode) {
-        Platform.runLater(() -> setSourceModeInView(newMode));
+        if (!newMode.equals("")) {
+            Platform.runLater(() -> setSourceModeInView(newMode));
+        }
     }
 
     private void modelTargetModeChanged(String newMode) {
-        Platform.runLater(() -> setTargetModeInView(newMode));
+        if (!newMode.equals("")) {
+            Platform.runLater(() -> setTargetModeInView(newMode));
+        }
     }
 
     private void modelSourceTextChanged(String newText, int tabIndex) {

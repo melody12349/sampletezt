@@ -16,6 +16,7 @@
 
 .root {
     -fx-font-family: 'sans-serif';
+    -fx-font-size: 11pt;
 }
 
 .menu-bar {

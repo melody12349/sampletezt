@@ -271,6 +271,10 @@ public class MainWindow extends AbstractWindow implements MainWindowView, MainWi
 
     private void tabSelectionChanged(ObservableValue<? extends Number> observable,
                                      Number oldIndex, Number newIndex) {
+        if (oldIndex.intValue() == -1) {
+            return;
+        }
+
         int tabIndex = newIndex.intValue();
         menuBar.setPrevTabState(tabIndex > 0);
         menuBar.setNextTabState(tabIndex != tabBar.getTabs().size() - 1);
