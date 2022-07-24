@@ -65,7 +65,6 @@ public class Application extends javafx.application.Application {
 
     private void loadProperties() {
         try {
-            logger.info("Loading properties");
             PropertiesLoader.loadProperties();
             logger.info("Properties loaded");
         } catch (Exception e) {
@@ -77,7 +76,6 @@ public class Application extends javafx.application.Application {
     private void loadLastState() {
         String saveSession = System.getProperty("model.save-session");
         if (saveSession.equals("enabled")) {
-            logger.info("Loading last state");
             deserializeModel();
             logger.info("Last state loaded");
         } else {
@@ -133,15 +131,15 @@ public class Application extends javafx.application.Application {
                 tabsData, fileHandler, converter, mainWindow
         );
 
-        fileCheckingThread = new Thread(fileHandler, "fileCheckingThread");
+        fileCheckingThread = new Thread(fileHandler, "File Checking Thread");
         fileCheckingThread.setDaemon(true);
         fileCheckingThread.start();
 
-        licenseCheckingThread = new Thread(license, "LicenseCheckingThread");
+        licenseCheckingThread = new Thread(license, "License Checking Thread");
         licenseCheckingThread.setDaemon(true);
         licenseCheckingThread.start();
 
-        checkpointThread = new Thread(this::runCheckpointLoop, "CheckpointThread");
+        checkpointThread = new Thread(this::runCheckpointLoop, "Checkpoint Thread");
         checkpointThread.setDaemon(true);
         checkpointThread.start();
     }

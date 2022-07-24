@@ -550,9 +550,9 @@ public class MainWindowPresenter {
             }
             loadTabsData();
             loadRecentFiles();
-            logger.info("Last state loaded");
+            logger.info("View initialized");
         } catch (Exception e) {
-            handleStateLoadingFailure(e);
+            handleViewInitializationFailure(e);
         }
     }
 
@@ -579,8 +579,8 @@ public class MainWindowPresenter {
         }
     }
 
-    private void handleStateLoadingFailure(Exception e) {
-        logger.error("Loading last state failed: " + e.getMessage());
+    private void handleViewInitializationFailure(Exception e) {
+        logger.error("View initialization failed: " + e.getMessage() + ". Going back to defaults");
         tabsData.removeAllTabs();
         view.closeAllTabs();
         openTabPressed();

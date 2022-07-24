@@ -97,9 +97,10 @@ public class License implements Runnable {
     }
 
     private void changeLicense(long lastModified) {
-        licenseListeners.forEach(license -> license.changed(isActive()));
+        boolean isActive = isActive();
+        licenseListeners.forEach(license -> license.changed(isActive));
         this.lastModified = lastModified;
-        logger.info("License changed");
+        logger.info("License changed. Status: " +  (isActive ? "Active" : "Not active"));
     }
 
     /**
@@ -107,6 +108,7 @@ public class License implements Runnable {
      */
     public synchronized boolean isActive() {
         try {
+            logger.info("Checking license...");
             String logFilePath = createLogFile();
             Arguments arguments = Arguments.builder()
                     .withLogFilePath(logFilePath)
@@ -118,6 +120,8 @@ public class License implements Runnable {
         } catch (Exception e) {
             logger.error(e.getMessage());
             return false;
+        } finally {
+            logger.info("License checked");
         }
     }
 
