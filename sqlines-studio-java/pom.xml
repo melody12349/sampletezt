@@ -13,11 +13,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
-        <javafx.version>11</javafx.version>
-        <richtext.version>0.10.6</richtext.version>
-        <fxmisc.version>0.6.6</fxmisc.version>
+        <javafx.version>18.0.1</javafx.version>
+        <richtext.version>0.10.9</richtext.version>
+        <fxmisc.version>0.6.10</fxmisc.version>
         <jangassen.version>3.1.0</jangassen.version>
-        <log4j.version>2.17.1</log4j.version>
+        <log4j.version>2.17.2</log4j.version>
         <junit.version>4.13.2</junit.version>
         <mocito.version>1.10.19</mocito.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
