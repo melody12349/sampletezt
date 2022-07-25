@@ -1,9 +1,10 @@
-**/.DS_Store
 **/.idea
 **/target
 **/${project.build.directory}
 **/*.iws
 **/*.iml
 **/*.ipr
+**/.DS_Store
 dependency-reduced-pom.xml
+SQLines Studio.app/
 
