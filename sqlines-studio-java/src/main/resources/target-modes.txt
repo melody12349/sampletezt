@@ -1,17 +1,22 @@
-Microsoft SQL Server:sql
-Oracle:oracle
-IBM DB2:DB2
+Greenplum:greenplum
 Hive:hive
-MySQL:mysql
+IBM DB2:db2
+Informix:informix
+Impala:impala
 MariaDB:mariadb
+Microsoft SQL Server:sql
+MySQL:mysql
+Netezza:netezza
+Oracle:oracle
+SingleStore:singlestore
+Snowflake:snowflake
+Spark SQL:spark
+Sybase ASE:sybase
+Sybase SQL Anywhere:asa
+Sybase Advantage:ads
 PostgreSQL:postgresql
 Presto:presto
 Redshift:redshift
-Snowflake:snowflake
-Spark SQL:spark
-Sybase:sybase
-Informix:informix
 Teradata:teradata
-Greenplum:greenplum
-Netezza:netezza
+Trino:trino
 Vertica:vertica
