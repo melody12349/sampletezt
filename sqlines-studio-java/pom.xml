@@ -14,7 +14,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <javafx.version>18.0.1</javafx.version>
-        <richtext.version>0.10.9</richtext.version>
+        <richtext.version>0.11.0</richtext.version>
         <fxmisc.version>0.6.10</fxmisc.version>
         <jangassen.version>3.1.0</jangassen.version>
         <log4j.version>2.17.2</log4j.version>
